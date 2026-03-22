@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANTY-ADHD — Mission Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0b;
+    --surface: #111113;
+    --surface-hover: #1a1a1d;
+    --border: #2a2a2e;
+    --border-bright: #3a3a3e;
+    --text: #e8e6e3;
+    --text-dim: #8a8a8e;
+    --text-muted: #5a5a5e;
+    --red: #ff3b30;
+    --red-dim: #ff3b3020;
+    --amber: #ff9f0a;
+    --amber-dim: #ff9f0a18;
+    --green: #30d158;
+    --green-dim: #30d15818;
+    --blue: #0a84ff;
+    --blue-dim: #0a84ff18;
+    --accent: #bf5af2;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .app {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 20px 80px;
+  }
+
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-left h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .header-left .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .clock { text-align: right; }
+
+  .clock .time {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+
+  .clock .date {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .clock .countdown {
+    font-size: 11px;
+    color: var(--accent);
+    margin-top: 6px;
+    letter-spacing: 1px;
+  }
+
+  .status-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .status-pill.danger { background: var(--red-dim); border: 1px solid #ff3b3040; color: var(--red); }
+  .status-pill.warning { background: var(--amber-dim); border: 1px solid #ff9f0a30; color: var(--amber); }
+  .status-pill.ok { background: var(--green-dim); border: 1px solid #30d15830; color: var(--green); }
+  .status-pill.info { background: var(--blue-dim); border: 1px solid #0a84ff30; color: var(--blue); }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .section { margin-bottom: 28px; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-header h2 {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .section-header .line { flex: 1; height: 1px; background: var(--border); }
+
+  .rules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+  }
+
+  .rule-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .rule-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--red);
+  }
+
+  .rule-card:hover { border-color: var(--border-bright); background: var(--surface-hover); }
+
+  .rule-card .rule-num {
+    font-size: 10px;
+    color: var(--red);
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .rule-card .rule-text { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.5; }
+
+  .priorities-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .priority-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .priority-item:hover { border-color: var(--border-bright); background: var(--surface-hover); }
+  .priority-item.completed { opacity: 0.4; }
+  .priority-item.completed .priority-label { text-decoration: line-through; }
+
+  .priority-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  .priority-tag.p1 { background: var(--red-dim); color: var(--red); border: 1px solid #ff3b3030; }
+  .priority-tag.p2 { background: var(--amber-dim); color: var(--amber); border: 1px solid #ff9f0a25; }
+  .priority-tag.p3 { background: var(--blue-dim); color: var(--blue); border: 1px solid #0a84ff25; }
+  .priority-tag.p4 { background: #bf5af215; color: var(--accent); border: 1px solid #bf5af225; }
+
+  .priority-label { font-size: 13px; font-weight: 500; flex: 1; }
+
+  .priority-check {
+    width: 18px; height: 18px;
+    border-radius: 4px;
+    border: 2px solid var(--border-bright);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .priority-item.completed .priority-check { background: var(--green); border-color: var(--green); }
+
+  .day-nav { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+
+  .day-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .day-btn:hover { border-color: var(--border-bright); color: var(--text); background: var(--surface-hover); }
+  .day-btn.active { background: var(--blue-dim); border-color: var(--blue); color: var(--blue); }
+  .day-btn.today { position: relative; }
+  .day-btn.today::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 50%;
+    transform: translateX(-50%);
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+  .day-btn.past { opacity: 0.4; }
+  .day-btn.free { border-color: var(--green); color: var(--green); opacity: 0.6; }
+
+  .schedule-table { width: 100%; border-collapse: collapse; }
+  .schedule-table tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  .schedule-table tr:hover { background: var(--surface-hover); }
+  .schedule-table tr.current-slot { background: var(--blue-dim); border-left: 3px solid var(--blue); }
+  .schedule-table tr.done-row { opacity: 0.35; }
+  .schedule-table td { padding: 10px 14px; vertical-align: top; }
+  .schedule-table .time-col { width: 120px; font-size: 12px; color: var(--text-dim); font-weight: 500; white-space: nowrap; }
+  .schedule-table .task-col { font-size: 13px; color: var(--text); }
+  .schedule-table .task-col .highlight { color: var(--amber); font-weight: 600; }
+  .schedule-table .task-col .tag-badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 6px;
+    vertical-align: middle;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .tag-badge.sales { background: var(--green-dim); color: var(--green); }
+  .tag-badge.work { background: var(--blue-dim); color: var(--blue); }
+  .tag-badge.personal { background: #bf5af215; color: var(--accent); }
+  .tag-badge.stop { background: var(--red-dim); color: var(--red); }
+
+  .day-title {
+    font-size: 14px; font-weight: 600; color: var(--text);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .day-type-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .free-day-msg {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--green);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  .free-day-msg .sub {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 400;
+    margin-top: 8px;
+    letter-spacing: 0;
+  }
+
+  .not-in-plan {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 6px;
+  }
+
+  .not-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .not-item .x-mark { color: var(--red); font-weight: 700; font-size: 14px; flex-shrink: 0; }
+
+  .warnings-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .warning-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px 14px 46px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+    position: relative;
+    transition: all 0.2s;
+  }
+
+  .warning-card:hover { border-color: var(--amber); background: var(--amber-dim); }
+
+  .warning-card .warn-num {
+    position: absolute;
+    left: 16px; top: 14px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--amber);
+  }
+
+  .progress-track { display: flex; gap: 3px; margin-bottom: 8px; }
+
+  .progress-block {
+    flex: 1; height: 8px; border-radius: 2px;
+    background: var(--surface); border: 1px solid var(--border);
+    transition: all 0.3s;
+  }
+
+  .progress-block.done-block { background: var(--green); border-color: var(--green); }
+  .progress-block.today-block { background: var(--blue); border-color: var(--blue); animation: pulse 2s infinite; }
+  .progress-block.free-block { background: var(--surface); border-color: var(--green); opacity: 0.5; }
+
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+
+  .checklist { display: flex; flex-direction: column; gap: 6px; }
+
+  .checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .checklist-item:hover { background: var(--surface-hover); border-color: var(--border-bright); }
+
+  .check-box {
+    width: 16px; height: 16px;
+    border: 2px solid var(--border-bright);
+    border-radius: 3px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .checklist-item.checked .check-box { background: var(--green); border-color: var(--green); }
+  .checklist-item.checked { opacity: 0.5; }
+
+  .after-hours-banner {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--red);
+    color: #000;
+    text-align: center;
+    padding: 14px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    z-index: 100;
+    animation: flashBanner 3s infinite;
+  }
+
+  .after-hours-banner.visible { display: block; }
+
+  @keyframes flashBanner { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+
+  .saturday-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .saturday-overlay.visible { display: flex; }
+
+  .saturday-overlay h2 {
+    font-size: 32px;
+    color: var(--green);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+  }
+
+  .saturday-overlay p {
+    font-size: 14px;
+    color: var(--text-dim);
+    max-width: 400px;
+    text-align: center;
+    line-height: 1.8;
+  }
+
+  .dismiss-btn {
+    margin-top: 20px;
+    background: none;
+    border: 1px solid var(--text-muted);
+    color: var(--text-muted);
+    padding: 8px 20px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+
+  .dismiss-btn:hover { border-color: var(--text); color: var(--text); }
+
+  /* ---- MAIN TABS ---- */
+  .main-tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .main-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    letter-spacing: 0.5px;
+  }
+
+  .main-tab:hover { color: var(--text); background: var(--surface-hover); }
+
+  .main-tab.active {
+    background: var(--bg);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  .main-tab .tab-icon {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 2px;
+    line-height: 1;
+  }
+
+  .tab-panel { animation: fadeIn 0.2s ease; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ---- BACKLOG ---- */
+  .backlog-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .backlog-tab {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .backlog-tab:hover { border-color: var(--border-bright); color: var(--text); background: var(--surface-hover); }
+  .backlog-tab.active { background: var(--accent); background: #bf5af225; border-color: var(--accent); color: var(--accent); }
+
+  .backlog-tab .tab-count {
+    font-size: 9px;
+    opacity: 0.6;
+    margin-left: 4px;
+  }
+
+  .backlog-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .backlog-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .backlog-card:hover { border-color: var(--border-bright); background: var(--surface-hover); }
+
+  .backlog-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+  }
+
+  .backlog-card.cat-sprzedaz::before { background: var(--green); }
+  .backlog-card.cat-auraic::before { background: var(--blue); }
+  .backlog-card.cat-tech::before { background: var(--amber); }
+  .backlog-card.cat-marketing::before { background: var(--accent); }
+  .backlog-card.cat-inne::before { background: var(--text-muted); }
+
+  .backlog-card .backlog-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .backlog-card .backlog-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .backlog-card .backlog-meta {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .backlog-card .backlog-badge {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+
+  .backlog-badge.status-waiting { background: var(--amber-dim); color: var(--amber); }
+  .backlog-badge.status-todo { background: var(--blue-dim); color: var(--blue); }
+  .backlog-badge.status-blocked { background: var(--red-dim); color: var(--red); }
+  .backlog-badge.status-idea { background: #bf5af215; color: var(--accent); }
+
+  .backlog-note {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 600px) {
+    .app { padding: 16px 12px 80px; }
+    .header { flex-direction: column; gap: 12px; }
+    .clock { text-align: left; }
+    .clock .time { font-size: 22px; }
+    .rules-grid { grid-template-columns: 1fr; }
+    .not-in-plan { grid-template-columns: 1fr; }
+    .day-nav { gap: 3px; }
+    .day-btn { padding: 5px 7px; font-size: 10px; }
+    .main-tab { padding: 8px 4px; font-size: 10px; }
+    .main-tab .tab-icon { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div class="header-left">
+      <h1>Anty-ADHD</h1>
+      <div class="subtitle">Mission Control — Plan do Turcji</div>
+    </div>
+    <div class="clock">
+      <div class="time" id="clock-time">--:--</div>
+      <div class="date" id="clock-date">---</div>
+      <div class="countdown" id="clock-countdown">---</div>
+    </div>
+  </div>
+
+  <div class="status-bar" id="status-bar"></div>
+
+  <div class="section">
+    <div class="section-header">
+      <h2>Postęp</h2>
+      <div class="line"></div>
+    </div>
+    <div class="progress-track" id="progress-track"></div>
+    <div class="progress-labels">
+      <span>17 MAR</span>
+      <span>1 APR</span>
+    </div>
+  </div>
+
+  <!-- MAIN TABS -->
+  <div class="main-tabs" id="main-tabs"></div>
+
+  <!-- TAB: DZIŚ -->
+  <div class="tab-panel" id="tab-dzis">
+    <div class="section">
+      <div class="section-header">
+        <h2>Harmonogram</h2>
+        <div class="line"></div>
+      </div>
+      <div class="day-nav" id="day-nav"></div>
+      <div id="schedule-content"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <h2>4 Priorytety</h2>
+        <div class="line"></div>
+      </div>
+      <div class="priorities-list" id="priorities-list"></div>
+    </div>
+  </div>
+
+  <!-- TAB: ZASADY -->
+  <div class="tab-panel" id="tab-zasady" style="display:none">
+    <div class="section">
+      <div class="section-header">
+        <h2>Zasady (nie negocjowalne)</h2>
+        <div class="line"></div>
+      </div>
+      <div class="rules-grid" id="rules-grid"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <h2>Sygnały ostrzegawcze</h2>
+        <div class="line"></div>
+      </div>
+      <div class="warnings-list" id="warnings-list"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <h2>Nie w tym planie (i to jest OK)</h2>
+        <div class="line"></div>
+      </div>
+      <div class="not-in-plan" id="not-in-plan"></div>
+    </div>
+  </div>
+
+  <!-- TAB: BACKLOG -->
+  <div class="tab-panel" id="tab-backlog" style="display:none">
+    <div class="section">
+      <div class="section-header">
+        <h2>Backlog — co czeka po Turcji</h2>
+        <div class="line"></div>
+      </div>
+      <div class="backlog-tabs" id="backlog-tabs"></div>
+      <div class="backlog-list" id="backlog-list"></div>
+    </div>
+  </div>
+
+  <!-- TAB: PODSUMOWANIE -->
+  <div class="tab-panel" id="tab-podsumowanie" style="display:none">
+    <div class="section">
+      <div class="section-header">
+        <h2>Podsumowanie po Turcji (~8 kwietnia)</h2>
+        <div class="line"></div>
+      </div>
+      <div class="checklist" id="checklist"></div>
+    </div>
+  </div>
+</div>
+
+<div class="after-hours-banner" id="after-hours-banner">
+  JEST PO 18:00 — ZAMKNIJ LAPTOPA. TO ADHD MÓWI, NIE TY.
+</div>
+
+<div class="saturday-overlay" id="saturday-overlay">
+  <h2>Sobota = Wolne</h2>
+  <p>Zero laptopa. Zero Claude Code. Zero Auraic.<br><br>Gosia, przyjaciele, spacer, odpoczynek, życie.</p>
+  <button class="dismiss-btn" id="dismiss-saturday">Wiem, tylko sprawdzam</button>
+</div>
+
+<script>
+const RULES = [
+  { num: 1, text: "Laptopa zamykasz o 18:00. Wieczory = Gosia, książka, odpoczynek." },
+  { num: 2, text: "Sobota = WOLNE. Zero laptopa. Zero Claude Code. Zero Auraic." },
+  { num: 3, text: 'Spanie do 23:00. Nie "jeszcze jedno zadanie".' },
+  { num: 4, text: "Ruch: 45min dziennie (spacer/trening/bieganie). Nie 2h bieżni." },
+  { num: 5, text: "Nie dodawaj nowych projektów. Zapisz pomysł, wróć po Turcji." },
+];
+
+const PRIORITIES = [
+  { tag: "P1", label: "Sprzedaż — spotkania z klientami + follow-up", cls: "p1" },
+  { tag: "P2", label: "Formularz intake na stronie Auraic", cls: "p2" },
+  { tag: "P3", label: "Trace Ostrość — premiera 27 marca", cls: "p3" },
+  { tag: "P4", label: "Rozliczenie rodziców — deadline 31 marca", cls: "p4" },
+];
+
+const NOT_IN_PLAN = [
+  "Lejek sprzedażowy", "SEO strony Auraic", "Cold calling",
+  "Domena do cold mailingu", "LinkedIn", "Wizytówka Google",
+  "DM-y insta", "Nowe skille/komendy w Claude Code", "Nowe funkcje flota-app",
+];
+
+const WARNINGS = [
+  'Jeśli o 18:00 myślisz "jeszcze tylko jedno zadanie" — to ADHD mówi, nie Ty. Zamknij laptopa.',
+  "Jeśli w sobotę otwierasz Claude Code — przypomnij sobie po co zrobiłeś ten plan.",
+  "Jeśli dodajesz nowe projekty — STOP. To zamknięta lista do Turcji. Zapisz pomysł w notatkach.",
+  'Jeśli czujesz że "nic nie robię" — wróć na górę i policz odchaczone checkboxy. Robisz dużo.',
+  "Jeśli rabbit hole Cię wciąga (nowy skill, nowa automatyzacja) — zamknij Claude Code. Wyjdź na spacer.",
+];
+
+const CHECKLIST_ITEMS = [
+  "Ile spotkań sprzedażowych odbyto?",
+  "Ile leadów z prototypów?",
+  "Formularz intake: działa? ile wypełnień?",
+  "Kampania Trace Ostrość: CPC, CTR, odtworzenia?",
+  "Rozliczenie rodziców: zrobione?",
+  "Jak się czułeś na wakacjach? Czy udało się odpocząć?",
+];
+
+const DAYS = [
+  { date: "2026-03-17", label: "Wt 17", title: "Wtorek 17 marca", type: "done",
+    tasks: [{ time: "Cały dzień", text: "Zrobione", tags: [], done: true }] },
+  { date: "2026-03-18", label: "Śr 18", title: "Środa 18 marca", type: "work",
+    tasks: [
+      { time: "9:00-9:15", text: "Zadzwonić o masaż", tags: ["personal"], done: true },
+      { time: "10:00-12:00", text: "Studio", tags: ["work"], done: true },
+      { time: "12:00-12:30", text: "Odpoczynek", tags: ["personal"] },
+      { time: "12:30-14:00", text: "Przygotowanie do spotkania sprzedażowego", tags: ["sales"] },
+      { time: "14:00-15:00", text: "Obiad", tags: ["personal"] },
+      { time: "15:00-16:00", text: "SIMLAB", tags: ["work"] },
+      { time: "16:00-18:00", text: "Formularz intake — build", tags: ["work"], highlight: true },
+      { time: "18:00", text: "ZAMKNIJ LAPTOPA", tags: ["stop"] },
+      { time: "18:30-20:00", text: "Zakupy + meal prep (na czw-pt)", tags: ["personal"] },
+    ] },
+  { date: "2026-03-19", label: "Cz 19", title: "Czwartek 19 — sprzedaż + prototyp", type: "work",
+    tasks: [
+      { time: "9:00-10:00", text: "SIMLAB 1h", tags: ["work"] },
+      { time: "10:15-12:00", text: "Sprzedaż: follow-up klientów, odpowiedzi, spotkania", tags: ["sales"], highlight: true },
+      { time: "12:00-13:00", text: "Obiad", tags: ["personal"] },
+      { time: "13:00-16:00", text: "Prototyp pod klienta / dokończenie formularza", tags: ["work"], highlight: true },
+      { time: "16:00-17:00", text: "Wygenerować kontent na SM na tydzień", tags: ["work"] },
+      { time: "17:00-17:45", text: "Trening 45min", tags: ["personal"] },
+      { time: "18:00", text: "ZAMKNIJ LAPTOPA", tags: ["stop"] },
+      { time: "18:00+", text: "Poker", tags: ["personal"] },
+    ] },
+  { date: "2026-03-20", label: "Pt 20", title: "Piątek 20 — sprzedaż + admin", type: "work",
+    tasks: [
+      { time: "9:00-10:00", text: "SIMLAB 1h", tags: ["work"] },
+      { time: "10:00-10:30", text: "Admin: zapłacić PITy + ZUS + ZAiKS", tags: ["work"] },
+      { time: "10:30-12:30", text: "Sprzedaż: spotkania, follow-up, nowi klienci", tags: ["sales"], highlight: true },
+      { time: "12:30-13:30", text: "Obiad", tags: ["personal"] },
+      { time: "13:30-14:30", text: "Przejrzeć appkę rodziców + zmienić soft do faktur", tags: ["work"] },
+      { time: "14:30-16:30", text: "Umyć rower + dopompować koła + zawieźć Mateuszowi", tags: ["personal"] },
+      { time: "16:30-17:30", text: "Prototyp pod klienta / bufor", tags: ["work"], highlight: true },
+      { time: "18:00", text: "ZAMKNIJ LAPTOPA", tags: ["stop"] },
+    ] },
+  { date: "2026-03-21", label: "So 21", title: "Sobota 21 — WOLNE", type: "free", tasks: [] },
+  { date: "2026-03-22", label: "Nd 22", title: "Niedziela 22 — Trace Ostrość + catch-up", type: "work",
+    tasks: [
+      { time: "9:00-10:30", text: "Trace Ostrość: research stock video + wybór klipów do rolek", tags: ["work"], highlight: true },
+      { time: "10:30-11:00", text: "Przerwa", tags: ["personal"] },
+      { time: "11:00-12:00", text: "Flying Bisons — aplikacja na ofertę pracy (mega ciekawa!)", tags: ["work"], highlight: true },
+      { time: "—", text: "Odebrać paczkę — Allegro", tags: ["personal"] },
+      { time: "12:00", text: "KONIEC — reszta dnia wolna", tags: ["stop"] },
+    ] },
+  { date: "2026-03-23", label: "Pn 23", title: "Poniedziałek 23 — Urodziny Kaliego", type: "work",
+    tasks: [
+      { time: "9:00-13:00", text: "Praca biuro", tags: ["work"] },
+      { time: "14:00-15:00", text: "Trace Ostrość: finalne klipy", tags: ["work"], highlight: true },
+      { time: "15:00-16:00", text: "Sprzedaż: follow-up", tags: ["sales"], highlight: true },
+      { time: "16:00+", text: "Urodziny Kaliego — bądź obecny, nie myśl o pracy", tags: ["personal"] },
+    ] },
+  { date: "2026-03-24", label: "Wt 24", title: "Wtorek 24 — Trace Ostrość montaż", type: "work",
+    tasks: [
+      { time: "9:00", text: "Kłykciny", tags: ["personal"] },
+      { time: "9:00-13:00", text: "Praca", tags: ["work"] },
+      { time: "14:00-17:00", text: "Montaż 3 rolek Trace Ostrość", tags: ["work"], highlight: true },
+      { time: "17:00-18:00", text: "Eksperymenty z Mr Hyde — inżynier robi mix/mastering, deadline!", tags: ["work"], highlight: true },
+      { time: "21:00", text: "Trening siłowy", tags: ["personal"] },
+    ] },
+  { date: "2026-03-25", label: "Śr 25", title: "Środa 25 — Meta Ads setup", type: "work",
+    tasks: [
+      { time: "9:00", text: "Kłykciny", tags: ["personal"] },
+      { time: "9:00-13:00", text: "Praca", tags: ["work"] },
+      { time: "14:00-16:00", text: "Meta Ads setup + wgraj rolki + zaplanuj start 27.03", tags: ["work"], highlight: true },
+    ] },
+  { date: "2026-03-26", label: "Cz 26", title: "Czwartek 26 — bufor", type: "work",
+    tasks: [
+      { time: "9:00", text: "Kłykciny", tags: ["personal"] },
+      { time: "9:00-13:00", text: "Praca", tags: ["work"] },
+      { time: "13:00", text: "Anulować Mimira", tags: ["personal"] },
+      { time: "14:00-14:45", text: "Przygotuj Instagram Story na premierę", tags: ["work"] },
+      { time: "15:00-17:00", text: "Trening siłowy", tags: ["personal"] },
+    ] },
+  { date: "2026-03-27", label: "Pt 27", title: "Piątek 27 — PREMIERA TRACE OSTROŚĆ", type: "special", typeLabel: "PREMIERA",
+    tasks: [
+      { time: "8:00-9:30", text: "PREMIERA: start kampanii + IG Story", tags: ["work"], highlight: true },
+      { time: "9:30", text: "Wypłacić pensje", tags: ["work"] },
+      { time: "10:00-14:00", text: "Praca", tags: ["work"] },
+      { time: "reszta dnia", text: "NIE RUSZAJ kampanii — Learning Phase", tags: ["stop"], highlight: true },
+      { time: "wieczór", text: "Świętuj z Gosią", tags: ["personal"] },
+    ] },
+  { date: "2026-03-28", label: "So 28", title: "Sobota 28 — u taty + chłopaki", type: "work",
+    tasks: [
+      { time: "9:30-12:30", text: "Konfiguracja laptopa u taty", tags: ["personal"] },
+      { time: "15:00", text: "Sprawdzenie statusu ZAiKS", tags: ["work"] },
+      { time: "wieczór", text: "Wyjście z chłopakami", tags: ["personal"] },
+    ] },
+  { date: "2026-03-29", label: "Nd 29", title: "Niedziela 29", type: "work",
+    tasks: [
+      { time: "10:00-12:00", text: "Pakowanie na Turcję + porządek w szafce z ciuchami", tags: ["personal"] },
+      { time: "reszta dnia", text: "Wolne + wieczór z Gosią", tags: ["personal"] },
+    ] },
+  { date: "2026-03-30", label: "Pn 30", title: "Poniedziałek 30", type: "work",
+    tasks: [
+      { time: "9:00-9:30", text: "Cięcia kampanii — zabij słabe reklamy (30min)", tags: ["work"] },
+      { time: "9:30-10:00", text: "Ustaw Automated Rules: auto-wyłącz jeśli CPC > 1.50 PLN", tags: ["work"] },
+      { time: "10:00-14:00", text: "Podwieź rozliczenie rodzicom", tags: ["personal"], highlight: true },
+      { time: "po południu", text: "Dokończenie pakowania", tags: ["personal"] },
+      { time: "—", text: "NIE pracuj nad Auraic", tags: ["stop"], highlight: true },
+    ] },
+  { date: "2026-03-31", label: "Wt 31", title: "Wtorek 31", type: "work",
+    tasks: [
+      { time: "9:00-9:10", text: "Sprawdź kampanię (10min)", tags: ["work"] },
+      { time: "reszta dnia", text: "Ostatnie rzeczy przed wyjazdem + odpoczynek", tags: ["personal"] },
+    ] },
+  { date: "2026-04-01", label: "1 KWI", title: "Środa 1 kwietnia — LOT DO TURCJI", type: "flight", typeLabel: "LOT",
+    tasks: [
+      { time: "—", text: "Lecisz. Kampania działa na Automated Rules.", tags: [] },
+      { time: "—", text: "Sprawdzaj raz dziennie z telefonu (10min max).", tags: [] },
+      { time: "—", text: "ZERO Claude Code przez całe wakacje.", tags: ["stop"], highlight: true },
+    ] },
+];
+
+const BACKLOG = [
+  // SPRZEDAŻ
+  { cat: "sprzedaz", title: "Follow-up 3 leadów z 17.03", desc: "Wysłano Google Forms, cisza. SMS follow-up wysłany 19.03. Jeśli dalej cisza — email: 'Formularz nie jest wymagany, mogę przygotować propozycję na bazie rozmowy.'", status: "waiting", note: "Wniosek: Google Form = za duży friction. Następnym razem wypełnij formularz ZA klienta." },
+  { cat: "sprzedaz", title: "Wioleta Zwolińska — kancelaria prawna", desc: "Pośredniczka z LinkedIn. Zarekomenduje Auraic w kancelarii prawnej. Spotkanie z kancelarią ~24-28.03. Czekać — Wioleta wróci z terminem.", status: "waiting", note: "Potencjalnie pierwszy płacący klient. Przygotować nowy brief pod konkretną kancelarię (nazwa, specjalizacja, strona)." },
+  { cat: "sprzedaz", title: "Lejek sprzedażowy — cały flow", desc: "Zdefiniować kroki od pierwszego kontaktu do podpisania umowy. Aktualnie: kuzyn dzwoni cold-callami do klinik med. estetycznej.", status: "todo" },
+  { cat: "sprzedaz", title: "Cold calling — skrypty + tracking", desc: "Kuzyn (5 PLN/telefon + 20% prowizji) dopiero zaczął. Cel: 3-5 klientów w 3 miesiące.", status: "todo" },
+
+  // AURAIC
+  { cat: "auraic", title: "SEO strony auraic-studio.com", desc: "Optymalizacja SEO głównej strony agencji. Meta tagi, schema markup, content.", status: "todo" },
+  { cat: "auraic", title: "Wizytówka Google Auraic", desc: "Założyć Google Business Profile dla Auraic Studio.", status: "todo" },
+  { cat: "auraic", title: "LinkedIn — profil firmowy", desc: "Założyć lub zoptymalizować profil LinkedIn dla Auraic.", status: "todo" },
+
+  // MARKETING
+  { cat: "marketing", title: "Instantly — kampania cold mail (med. estetyczna)", desc: "✅ Domena kupiona: auraicstudio.com (Cloudflare). ✅ User: mateusz@auraicstudio.com (Google Workspace). Zostało: DNS w Cloudflare (SPF + DKIM + DMARC) → podpiąć do Instantly (SMTP/IMAP, App Password) → warmup 14 dni → przygotować listę klinik + sekwencję 3 maili → start kampanii → aktywować n8n workflow Instantly→CRM Sync (ID: rwZDASdpTSCgzqj6).", status: "todo", note: "Obecne konto kontakt.auraic@gmail.com do usunięcia — Gmail nie nadaje się do cold maili." },
+  { cat: "marketing", title: "DM-y Instagram — nowy koncept z kuzynem", desc: "Stary model DM-ów zastąpiony nowym konceptem z kuzynem. Do opracowania po Turcji.", status: "idea" },
+  { cat: "marketing", title: "Reels — nagrania ekranowe + AI voiceover", desc: "Scrollowanie stron firm + ElevenLabs po polsku + montaż CapCut z auto-napisami. Bez kamery na twarz. Docelowo zatrudnić kogoś.", status: "idea" },
+  { cat: "marketing", title: "Automatyzacja postów SM", desc: "Skrypt robi research trendów → wybiera temat → generuje slajdy karuzeli → wstrzykuje do appki post creator przez API. Mati tylko przegląda i publikuje.", status: "todo" },
+
+  // TECH
+  { cat: "tech", title: "Usunąć automatyzację Daily Brief", desc: "Usunąć workflow Daily Brief z n8n — nieużywany, nigdy nie dokończony (blocker: Google OAuth2).", status: "todo" },
+  { cat: "sprzedaz", title: "Automatyczne śledzenie follow-upów Auraic", desc: "System przypomnień o follow-upach: kiedy wysłać maila/zadzwonić do leada. Opcje: n8n workflow + CRM (crm-leads) → SMS/push przypomnienie, albo Google Calendar eventy. Połączyć z pipeline sprzedażowym.", status: "todo" },
+  { cat: "tech", title: "Nowe funkcje flota-app", desc: "Ewentualne poprawki/features do aplikacji flotowej rodziców (toptrans.app). Chyba że krytyczny bug.", status: "idea" },
+  { cat: "tech", title: "Nowe skille/komendy Claude Code", desc: "Pomysły na nowe automatyzacje, skille, komendy. Zapisywać, nie implementować.", status: "idea" },
+  { cat: "tech", title: "API OpenRouter", desc: "Dodać integrację z OpenRouter API — dostęp do wielu modeli AI przez jedno API.", status: "todo" },
+
+  // INNE
+  { cat: "inne", title: "Skill /finanse — budżet firmowy + prywatny", desc: "Nowy skill do zarządzania finansami: budżet B2B (Auraic, przychody, koszty, faktury) + budżet prywatny. Połączyć z istniejącym skillem /faktury (Infakt API) i Google Sheets.", status: "idea" },
+  { cat: "inne", title: "Useme — zlecenia freelancerskie", desc: "Szukanie zleceń na Useme: appki webowe, automatyzacje AI, n8n, voice agents, kalkulatory. Stawka 90-120 PLN/h.", status: "todo" },
+  { cat: "tech", title: "Product Hunt — automatyzacja śledzenia nowinek", desc: "Automatyzacja (n8n/skrypt) śledząca najnowsze produkty na Product Hunt — filtrowanie po kategoriach (AI, SaaS, narzędzia), notyfikacja o ciekawych.", status: "todo" },
+  { cat: "inne", title: "Appka do terapii — Mati + Gosia", desc: "Aplikacja wspierająca terapię — do zaprojektowania zakres i funkcje po Turcji.", status: "idea" },
+  { cat: "marketing", title: "Przejrzeć zapisane posty o Claude + DM-y", desc: "Sprawdzić wszystkie zapisane posty (Instagram/LinkedIn?) o Claude Code i DM-y — wyciągnąć wnioski, pomysły, kontakty.", status: "todo" },
+  { cat: "inne", title: "Strona korepetycji dla Gosi", desc: "Zbudować stronę internetową dla Gosi — korepetycje. Stack: React/Vite, mobile-first, formularz kontaktowy.", status: "todo" },
+  { cat: "inne", title: "Nowe przepisy do Notion", desc: "Dodać nowe przepisy meal prep do strony Przepisy w Notion (aktualnie 16 przepisów).", status: "todo" },
+  { cat: "tech", title: "Sprawdzić GSAP Demo Hub", desc: "Przejrzeć GSAP Demo Hub — animacje, efekty, potencjalne zastosowanie w stronach klientów Auraic.", status: "idea" },
+  { cat: "inne", title: "Rutyna dnia — system anty-ADHD", desc: "Opracować stałą rutynę funkcjonowania: poranny rytuał, bloki pracy, przerwy, zamknięcie dnia. Żeby ADHD nie przejmowało kontroli. Połączyć z appką anty-adhd i Google Calendar.", status: "todo" },
+  { cat: "tech", title: "CRM — lista zadań", desc: "Dodać moduł zadań do crm-leads: task list per lead, przypomnienia, deadliny. Połączyć z follow-upami.", status: "todo" },
+  { cat: "auraic", title: "Automatyzacja procesów w firmie", desc: "Zmapować powtarzalne procesy Auraic (prospecting, audyt, oferta, follow-up, fakturowanie, content) i zautomatyzować maksymalnie — n8n workflows, skrypty, Claude Code skills. Cel: mniej manualnej pracy.", status: "todo" },
+  { cat: "tech", title: "Podłączenie Google CLI AI (Gemini CLI)", desc: "Skonfigurować Google Gemini CLI — dodatkowe narzędzie AI obok Claude Code.", status: "todo" },
+  { cat: "inne", title: "Letnia EP-ka — singiel + 3 numery", desc: "Projekt muzyczny: EP na lato. Najpierw inspo: OKI — Najlepszy Dzień, Mata — Kamikaze. Singiel + 3 tracki.", status: "idea" },
+  { cat: "tech", title: "Skill /suno — prompty do generowania muzyki", desc: "Skill Claude Code pomagający tworzyć prompty do Suno AI — styl, instrumenty, mood, struktura utworu, lyrics.", status: "todo" },
+  { cat: "sprzedaz", title: "Useme — dodać 2 strony do portfolio", desc: "Wybrać 2 najlepsze realizacje klientów Auraic i dodać jako portfolio na profilu Useme.", status: "todo" },
+  { cat: "auraic", title: "Nowa strona Auraic", desc: "Redesign auraic-studio.com — nowy design, lepsze portfolio, case studies, formularz intake, SEO.", status: "todo" },
+  { cat: "auraic", title: "Szukanie freelancerów do Auraic", desc: "Znaleźć freelancerów do współpracy: copywriter, grafik, social media manager, sprzedawca. Useme, LinkedIn, grupy FB.", status: "todo" },
+  { cat: "inne", title: "Kurs programowania dla siebie", desc: "Przygotować spersonalizowany kurs programowania — React, TypeScript, Node.js, bazy danych. Żeby rozumieć co Claude Code robi, nie tylko kopiować.", status: "todo" },
+  { cat: "sprzedaz", title: "Zatrudnić agencję sprzedażową", desc: "Jeśli do Turcji (1.04) nie wpadnie klient — rozważyć agencję sprzedażową. Research na Perplexity gotowy. Link: perplexity.ai/computer/tasks/znajdz-mi-agencje-ktora-znajdz-1eFEpXxOTtOS.eG11N1O9g", status: "waiting", note: "Warunek: tylko jeśli zero klientów do 1 kwietnia. Najpierw sprawdź wyniki cold mailingu i kuzynowego cold callingu." },
+  { cat: "tech", title: "Własne API do Variants.com", desc: "Zbudować własne API integrujące się z Variants.com — do automatyzacji wizualizacji wariantów stron klientów.", status: "idea" },
+  { cat: "tech", title: "Agent Orchestration — zbudować", desc: "System orkiestracji agentów AI — koordynacja wielu agentów (Claude, Gemini, specjalizowane) do złożonych zadań. Multi-agent workflows.", status: "idea" },
+  { cat: "inne", title: "Zamówić przyrząd z Temu do krojenia", desc: "Zamówić przyrząd kuchenny do krojenia z Temu.", status: "todo" },
+  { cat: "tech", title: "Sprawdzić CodeRabbit", desc: "Przejrzeć CodeRabbit (AI code review) — czy warto używać do review kodu generowanego przez Claude Code.", status: "idea" },
+  { cat: "auraic", title: "Opracować sposób deployu stron klientów", desc: "Ustalić standardowy pipeline deployu: repo → CI/CD → hosting. Netlify vs Railway vs Hetzner vs cPanel. Automatyzacja: push → build → deploy.", status: "todo" },
+  { cat: "inne", title: "Posprzątać szafkę z przekąskami", desc: "Wyrzucić stare, uporządkować.", status: "todo" },
+  { cat: "tech", title: "Bot do pasywnego zarabiania", desc: "Zbudować bota generującego pasywny dochód — research modeli (trading, arbitraż, SaaS micro, affiliate), wybór najlepszego i implementacja.", status: "idea" },
+  { cat: "tech", title: "Update Claude Code", desc: "Zaktualizować Claude Code do najnowszej wersji — sprawdzić changelog, nowe funkcje, breaking changes.", status: "todo" },
+  { cat: "tech", title: "Zainstalować plugin Telegram", desc: "Zainstalować i skonfigurować plugin Telegram do Claude Code — integracja z Telegram API, powiadomienia, komendy.", status: "todo" },
+  { cat: "marketing", title: "Generowanie postów SM z telefonu", desc: "Workflow do generowania i publikowania postów social media bezpośrednio z telefonu — mobilny dostęp do post creatora lub alternatywne rozwiązanie.", status: "todo" },
+  { cat: "inne", title: "Dodać miskę na tapetę", desc: "Kupić/zamówić miskę dekoracyjną na tapetę.", status: "todo" },
+  { cat: "tech", title: "Luma AI — motion graphics", desc: "Przetestować Luma AI do generowania motion graphics — potencjalne zastosowanie w reelsach, prezentacjach klientów, contencie Auraic.", status: "idea" },
+  { cat: "inne", title: "Biegowa Kuźnia — bieganie", desc: "Dołączyć do Biegowej Kuźni — plan treningowy biegowy, regularność, cel sportowy.", status: "todo" },
+  { cat: "tech", title: "Auto-update w projektach live", desc: "Zbudować system auto-update dla projektów w produkcji (flota-app, crm-leads, strony klientów) — automatyczny deploy po pushu, health checks, rollback.", status: "todo" },
+  { cat: "tech", title: "Centrum zarządzania — dashboard", desc: "Stworzyć własne centrum zarządzania — jeden dashboard łączący: CRM, leady, faktury, projekty, kalendarz, backlog, statusy deployów. Jedno miejsce do kontroli wszystkiego.", status: "idea" },
+];
+
+const BACKLOG_CATS = [
+  { id: "all", label: "Wszystko" },
+  { id: "sprzedaz", label: "Sprzedaż" },
+  { id: "auraic", label: "Auraic" },
+  { id: "marketing", label: "Marketing" },
+  { id: "tech", label: "Tech" },
+  { id: "inne", label: "Inne" },
+];
+
+const STATUS_LABELS = {
+  waiting: "Czeka",
+  todo: "Do zrobienia",
+  blocked: "Zablokowane",
+  idea: "Pomysł",
+};
+
+let selectedBacklogCat = "all";
+
+const MAIN_TABS = [
+  { id: "dzis", label: "Dziś", icon: "\u25C9" },
+  { id: "zasady", label: "Zasady", icon: "\u2691" },
+  { id: "backlog", label: "Backlog", icon: "\u2630" },
+  { id: "podsumowanie", label: "Podsumowanie", icon: "\u2611" },
+];
+
+let activeTab = "dzis";
+
+const DAYS_PL = ["Niedziela","Poniedziałek","Wtorek","Środa","Czwartek","Piątek","Sobota"];
+const MONTHS_PL = ["stycznia","lutego","marca","kwietnia","maja","czerwca","lipca","sierpnia","września","października","listopada","grudnia"];
+
+// State & Sync
+var API_BASE = location.hostname === 'adhd.auraic-studio.com' ? '' : '';
+var SYNC_URL = location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+  ? '' : '/api/state';
+
+function loadState(key, fallback) {
+  try { var v = localStorage.getItem('adhd_' + key); return v ? JSON.parse(v) : fallback; }
+  catch(e) { return fallback; }
+}
+function saveState(key, val) {
+  localStorage.setItem('adhd_' + key, JSON.stringify(val));
+  syncToServer();
+}
+
+var syncTimeout = null;
+function syncToServer() {
+  if (!SYNC_URL) return;
+  clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(function() {
+    var state = {
+      priorities: priorityState,
+      checklist: checklistState
+    };
+    fetch(SYNC_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state)
+    }).catch(function() {});
+  }, 500);
+}
+
+function syncFromServer() {
+  if (!SYNC_URL) return;
+  fetch(SYNC_URL).then(function(r) { return r.json(); }).then(function(data) {
+    if (data && data.version) {
+      var changed = false;
+      if (data.priorities && JSON.stringify(data.priorities) !== JSON.stringify(priorityState)) {
+        priorityState = data.priorities;
+        localStorage.setItem('adhd_priorities', JSON.stringify(priorityState));
+        changed = true;
+      }
+      if (data.checklist && JSON.stringify(data.checklist) !== JSON.stringify(checklistState)) {
+        checklistState = data.checklist;
+        localStorage.setItem('adhd_checklist', JSON.stringify(checklistState));
+        changed = true;
+      }
+      if (changed) {
+        renderPriorities();
+        renderChecklist();
+      }
+    }
+  }).catch(function() {});
+}
+
+let priorityState = loadState('priorities', [false, false, false, false]);
+let checklistState = loadState('checklist', CHECKLIST_ITEMS.map(function() { return false; }));
+let selectedDay = 0;
+
+// Helpers
+function now() { return new Date(); }
+function todayStr() {
+  const d = now();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function getTodayIndex() {
+  const t = todayStr();
+  const idx = DAYS.findIndex(function(d) { return d.date === t; });
+  return idx >= 0 ? idx : 0;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.textContent;
+}
+
+// Render functions
+function updateClock() {
+  var n = now();
+  document.getElementById('clock-time').textContent =
+    String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+  document.getElementById('clock-date').textContent =
+    DAYS_PL[n.getDay()] + ', ' + n.getDate() + ' ' + MONTHS_PL[n.getMonth()] + ' ' + n.getFullYear();
+  var turkey = new Date('2026-04-01T00:00:00');
+  var diff = Math.max(0, Math.ceil((turkey - n) / (1000*60*60*24)));
+  document.getElementById('clock-countdown').textContent =
+    diff > 0 ? ('Turcja za ' + diff + ' dni') : 'JESTES W TURCJI';
+}
+
+function renderMainTabs() {
+  var el = document.getElementById('main-tabs');
+  while (el.firstChild) el.removeChild(el.firstChild);
+
+  MAIN_TABS.forEach(function(tab) {
+    var btn = document.createElement('button');
+    btn.className = 'main-tab' + (activeTab === tab.id ? ' active' : '');
+    var icon = document.createElement('span');
+    icon.className = 'tab-icon';
+    icon.textContent = tab.icon;
+    btn.appendChild(icon);
+    btn.appendChild(document.createTextNode(tab.label));
+    btn.addEventListener('click', function() { switchTab(tab.id); });
+    el.appendChild(btn);
+  });
+}
+
+function switchTab(tabId) {
+  activeTab = tabId;
+  MAIN_TABS.forEach(function(tab) {
+    var panel = document.getElementById('tab-' + tab.id);
+    if (panel) panel.style.display = tab.id === tabId ? 'block' : 'none';
+  });
+  renderMainTabs();
+}
+
+function renderStatusBar() {
+  var el = document.getElementById('status-bar');
+  var n = now();
+  var hour = n.getHours();
+  var day = n.getDay();
+
+  while (el.firstChild) el.removeChild(el.firstChild);
+
+  function addPill(text, cls) {
+    var pill = document.createElement('div');
+    pill.className = 'status-pill ' + cls;
+    var dot = document.createElement('div');
+    dot.className = 'status-dot';
+    pill.appendChild(dot);
+    pill.appendChild(document.createTextNode(text));
+    el.appendChild(pill);
+  }
+
+  if (day === 6) {
+    addPill("SOBOTA \u2014 WOLNE", "ok");
+  } else if (hour >= 18) {
+    addPill("PO 18:00 — ZAMKNIJ LAPTOPA", "danger");
+  } else if (hour >= 16) {
+    addPill("Zostało " + (18 - hour) + "h do zamknięcia", "warning");
+  } else {
+    addPill("Czas pracy", "ok");
+  }
+
+  var todayDay = DAYS.find(function(d) { return d.date === todayStr(); });
+  if (todayDay) {
+    if (todayDay.type === 'free') addPill("DZIEŃ WOLNY", "ok");
+    else if (todayDay.type === 'special') addPill(todayDay.typeLabel, "warning");
+    else if (todayDay.type === 'flight') addPill("LOT DO TURCJI", "info");
+  }
+}
+
+function renderRules() {
+  var el = document.getElementById('rules-grid');
+  while (el.firstChild) el.removeChild(el.firstChild);
+
+  RULES.forEach(function(r) {
+    var card = document.createElement('div');
+    card.className = 'rule-card';
+    var num = document.createElement('div');
+    num.className = 'rule-num';
+    num.textContent = 'Zasada ' + r.num;
+    var text = document.createElement('div');
+    text.className = 'rule-text';
+    text.textContent = r.text;
+    card.appendChild(num);
+    card.appendChild(text);
+    el.appendChild(card);
+  });
+}
+
+function renderPriorities() {
+  var el = document.getElementById('priorities-list');
+  while (el.firstChild) el.removeChild(el.firstChild);
+
+  PRIORITIES.forEach(function(p, i) {
+    var item = document.createElement('div');
+    item.className = 'priority-item' + (priorityState[i] ? ' completed' : '');
+    item.setAttribute('data-index', i);
+
+    var tag = document.createElement('div');
+    tag.className = 'priority-tag ' + p.cls;
+    tag.textContent = p.tag;
+
+    var label = document.createElement('div');
+    label.className = 'priority-label';
+    label.textContent = p.label;
+
+    var check = document.createElement('div');
+    check.className = 'priority-check';
+    if (priorityState[i]) check.textContent = '\u2713';
+
+    item.appendChild(tag);
+    item.appendChild(label);
+    item.appendChild(check);
+    item.addEventListener('click', function() { togglePriority(i); });
+    el.appendChild(item);
+  });
+}
+
+function togglePriority(i) {
+  priorityState[i] = !priorityState[i];
+  saveState('priorities', priorityState);
+  renderPriorities();
+}
+
+function renderProgress() {
+  var el = document.getElementById('progress-track');
+  while (el.firstChild) el.removeChild(el.firstChild);
+  var t = todayStr();
+
+  DAYS.forEach(function(d) {
+    var block = document.createElement('div');
+    block.className = 'progress-block';
+    block.title = d.label;
+    if (d.date === t) block.classList.add('today-block');
+    else if (d.date < t) block.classList.add('done-block');
+    if (d.type === 'free') block.classList.add('free-block');
+    el.appendChild(block);
+  });
+}
+
+function renderDayNav() {
+  var el = document.getElementById('day-nav');
+  while (el.firstChild) el.removeChild(el.firstChild);
+  var t = todayStr();
+
+  DAYS.forEach(function(d, i) {
+    var btn = document.createElement('button');
+    btn.className = 'day-btn';
+    btn.textContent = d.label;
+    if (i === selectedDay) btn.classList.add('active');
+    if (d.date === t) btn.classList.add('today');
+    if (d.date < t) btn.classList.add('past');
+    if (d.type === 'free') btn.classList.add('free');
+    btn.addEventListener('click', function() { selectDay(i); });
+    el.appendChild(btn);
+  });
+}
+
+function selectDay(i) {
+  selectedDay = i;
+  renderDayNav();
+  renderSchedule();
+}
+
+function renderSchedule() {
+  var container = document.getElementById('schedule-content');
+  while (container.firstChild) container.removeChild(container.firstChild);
+
+  var day = DAYS[selectedDay];
+  var n_now = now();
+  var currentHour = n_now.getHours();
+  var isToday = day.date === todayStr();
+
+  var titleDiv = document.createElement('div');
+  titleDiv.className = 'day-title';
+  titleDiv.textContent = day.title;
+
+  if (day.typeLabel) {
+    var badge = document.createElement('span');
+    badge.className = 'day-type-badge';
+    var colorMap = { PREMIERA: 'amber', LOT: 'blue' };
+    var col = colorMap[day.typeLabel] || 'blue';
+    badge.style.background = 'var(--' + col + '-dim)';
+    badge.style.color = 'var(--' + col + ')';
+    badge.style.border = '1px solid var(--' + col + ')';
+    badge.textContent = day.typeLabel;
+    titleDiv.appendChild(badge);
+  }
+
+  container.appendChild(titleDiv);
+
+  if (day.type === 'free') {
+    var freeMsg = document.createElement('div');
+    freeMsg.className = 'free-day-msg';
+    freeMsg.textContent = 'DZIEŃ WOLNY';
+    var sub = document.createElement('div');
+    sub.className = 'sub';
+    sub.textContent = 'Zero laptopa. Zero Claude Code. Zero Auraic. Gosia, przyjaciele, spacer, odpoczynek, życie.';
+    freeMsg.appendChild(sub);
+    container.appendChild(freeMsg);
+    return;
+  }
+
+  var table = document.createElement('table');
+  table.className = 'schedule-table';
+  var tbody = document.createElement('tbody');
+
+  day.tasks.forEach(function(t) {
+    var tr = document.createElement('tr');
+
+    if (t.done) tr.classList.add('done-row');
+
+    if (isToday && !t.done) {
+      var match = t.time.match(/^(\d+)/);
+      if (match) {
+        var taskHour = parseInt(match[1]);
+        var endMatch = t.time.match(/-(\d+)/);
+        var endHour = endMatch ? parseInt(endMatch[1]) : taskHour + 1;
+        if (currentHour >= taskHour && currentHour < endHour) {
+          tr.classList.add('current-slot');
+        }
+      }
+    }
+
+    var tdTime = document.createElement('td');
+    tdTime.className = 'time-col';
+    tdTime.textContent = t.time;
+
+    var tdTask = document.createElement('td');
+    tdTask.className = 'task-col';
+
+    if (t.highlight) {
+      var strong = document.createElement('span');
+      strong.className = 'highlight';
+      strong.textContent = t.text;
+      tdTask.appendChild(strong);
+    } else {
+      tdTask.textContent = t.text;
+    }
+
+    t.tags.forEach(function(tag) {
+      var badge = document.createElement('span');
+      badge.className = 'tag-badge ' + tag;
+      badge.textContent = tag;
+      tdTask.appendChild(badge);
+    });
+
+    tr.appendChild(tdTime);
+    tr.appendChild(tdTask);
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  container.appendChild(table);
+}
+
+function renderNotInPlan() {
+  var el = document.getElementById('not-in-plan');
+  while (el.firstChild) el.removeChild(el.firstChild);
+
+  NOT_IN_PLAN.forEach(function(item) {
+    var div = document.createElement('div');
+    div.className = 'not-item';
+    var x = document.createElement('span');
+    x.className = 'x-mark';
+    x.textContent = '\u00d7';
+    div.appendChild(x);
+    div.appendChild(document.createTextNode(item));
+    el.appendChild(div);
+  });
+}
+
+function renderWarnings() {
+  var el = document.getElementById('warnings-list');
+  while (el.firstChild) el.removeChild(el.firstChild);
+
+  WARNINGS.forEach(function(w, i) {
+    var card = document.createElement('div');
+    card.className = 'warning-card';
+    var num = document.createElement('span');
+    num.className = 'warn-num';
+    num.textContent = (i + 1) + '.';
+    card.appendChild(num);
+    card.appendChild(document.createTextNode(w));
+    el.appendChild(card);
+  });
+}
+
+function renderChecklist() {
+  var el = document.getElementById('checklist');
+  while (el.firstChild) el.removeChild(el.firstChild);
+
+  CHECKLIST_ITEMS.forEach(function(item, i) {
+    var div = document.createElement('div');
+    div.className = 'checklist-item' + (checklistState[i] ? ' checked' : '');
+
+    var box = document.createElement('div');
+    box.className = 'check-box';
+    if (checklistState[i]) box.textContent = '\u2713';
+
+    div.appendChild(box);
+    div.appendChild(document.createTextNode(item));
+    div.addEventListener('click', function() { toggleChecklist(i); });
+    el.appendChild(div);
+  });
+}
+
+function toggleChecklist(i) {
+  checklistState[i] = !checklistState[i];
+  saveState('checklist', checklistState);
+  renderChecklist();
+}
+
+function renderBacklogTabs() {
+  var el = document.getElementById('backlog-tabs');
+  while (el.firstChild) el.removeChild(el.firstChild);
+
+  BACKLOG_CATS.forEach(function(cat) {
+    var count = cat.id === 'all' ? BACKLOG.length : BACKLOG.filter(function(b) { return b.cat === cat.id; }).length;
+    var btn = document.createElement('button');
+    btn.className = 'backlog-tab' + (selectedBacklogCat === cat.id ? ' active' : '');
+    btn.textContent = cat.label;
+    var countSpan = document.createElement('span');
+    countSpan.className = 'tab-count';
+    countSpan.textContent = '(' + count + ')';
+    btn.appendChild(countSpan);
+    btn.addEventListener('click', function() {
+      selectedBacklogCat = cat.id;
+      renderBacklogTabs();
+      renderBacklog();
+    });
+    el.appendChild(btn);
+  });
+}
+
+function renderBacklog() {
+  var el = document.getElementById('backlog-list');
+  while (el.firstChild) el.removeChild(el.firstChild);
+
+  var items = selectedBacklogCat === 'all' ? BACKLOG : BACKLOG.filter(function(b) { return b.cat === selectedBacklogCat; });
+
+  items.forEach(function(item) {
+    var card = document.createElement('div');
+    card.className = 'backlog-card cat-' + item.cat;
+
+    var title = document.createElement('div');
+    title.className = 'backlog-title';
+    title.textContent = item.title;
+    card.appendChild(title);
+
+    var desc = document.createElement('div');
+    desc.className = 'backlog-desc';
+    desc.textContent = item.desc;
+    card.appendChild(desc);
+
+    var meta = document.createElement('div');
+    meta.className = 'backlog-meta';
+
+    var statusBadge = document.createElement('span');
+    statusBadge.className = 'backlog-badge status-' + item.status;
+    statusBadge.textContent = STATUS_LABELS[item.status] || item.status;
+    meta.appendChild(statusBadge);
+
+    var catBadge = document.createElement('span');
+    catBadge.className = 'backlog-badge';
+    catBadge.style.background = 'var(--surface-hover)';
+    catBadge.style.color = 'var(--text-dim)';
+    catBadge.textContent = item.cat;
+    meta.appendChild(catBadge);
+
+    card.appendChild(meta);
+
+    if (item.note) {
+      var note = document.createElement('div');
+      note.className = 'backlog-note';
+      note.textContent = item.note;
+      card.appendChild(note);
+    }
+
+    el.appendChild(card);
+  });
+}
+
+function checkAfterHours() {
+  var n = now();
+  var hour = n.getHours();
+  var banner = document.getElementById('after-hours-banner');
+  var overlay = document.getElementById('saturday-overlay');
+
+  if (n.getDay() === 6) overlay.classList.add('visible');
+  if (hour >= 18 || hour < 6) banner.classList.add('visible');
+  else banner.classList.remove('visible');
+}
+
+// Init
+document.getElementById('dismiss-saturday').addEventListener('click', function() {
+  document.getElementById('saturday-overlay').classList.remove('visible');
+});
+
+selectedDay = getTodayIndex();
+updateClock();
+renderMainTabs();
+renderStatusBar();
+renderProgress();
+renderRules();
+renderPriorities();
+renderDayNav();
+renderSchedule();
+renderBacklogTabs();
+renderBacklog();
+renderNotInPlan();
+renderWarnings();
+renderChecklist();
+checkAfterHours();
+
+setInterval(updateClock, 1000);
+setInterval(renderStatusBar, 60000);
+setInterval(checkAfterHours, 60000);
+
+// Sync: load from server on start, poll every 30s
+syncFromServer();
+setInterval(syncFromServer, 30000);
+</script>
+</body>
+</html>
