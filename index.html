@@ -92,13 +92,79 @@
     margin-top: 6px;
     letter-spacing: 1px;
   }
+  .add-quick-btn {
+    margin-top: 10px;
+    background: var(--green);
+    color: var(--bg);
+    border: none;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: 0.5px;
+  }
+  .add-quick-btn:hover { opacity: 0.85; }
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-content {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    width: 90%;
+    max-width: 480px;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  .modal-close {
+    position: absolute;
+    top: 12px; right: 16px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 22px;
+    cursor: pointer;
+  }
+  .modal-close:hover { color: var(--text); }
+  .confirm-icon { font-size: 36px; margin-bottom: 8px; }
+  .confirm-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+  .confirm-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.4; }
+  .confirm-btns { display: flex; gap: 10px; }
+  .confirm-cancel { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
+  .confirm-cancel:hover { background: var(--surface-hover); }
+  .confirm-delete { flex: 1; background: var(--red, #e55); border: none; color: #fff; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .confirm-delete:hover { opacity: 0.85; }
+  .undo-toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 20px; display: flex; align-items: center; gap: 14px;
+    z-index: 1100; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    animation: slideUp 0.3s ease;
+  }
+  .undo-toast span { font-size: 13px; color: var(--text); }
+  .undo-btn { background: var(--green); color: var(--bg); border: none; padding: 6px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .undo-btn:hover { opacity: 0.85; }
+  @keyframes slideUp { from { transform: translateX(-50%) translateY(20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
 
   .status-bar {
     display: flex;
     gap: 12px;
     margin-bottom: 28px;
     flex-wrap: wrap;
+    align-items: center;
   }
+  .status-bar .add-quick-btn { margin-left: auto; }
 
   .status-pill {
     display: flex;
@@ -267,6 +333,42 @@
   .schedule-table tr:hover { background: var(--surface-hover); }
   .schedule-table tr.current-slot { background: var(--blue-dim); border-left: 3px solid var(--blue); }
   .schedule-table tr.done-row { opacity: 0.35; }
+  .schedule-table tr.done-row .task-col { text-decoration: line-through; color: var(--muted); }
+  .schedule-table tr.done-row .time-col { text-decoration: line-through; color: var(--muted); }
+  .task-check { width: 18px; min-width: 18px; padding-right: 0; }
+  .task-check input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; accent-color: var(--green); }
+  .add-panel { margin-top: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .add-panel-title { font-size: 12px; font-weight: 600; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 12px; }
+  .add-field { margin-bottom: 10px; }
+  .add-field label { display: block; font-size: 11px; color: var(--text-dim); margin-bottom: 4px; font-weight: 500; }
+  .add-field input, .add-field textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px; font-size: 16px; font-family: inherit; box-sizing: border-box; }
+  .add-field input:focus, .add-field textarea:focus { outline: none; border-color: var(--green); }
+  .add-field textarea { resize: vertical; min-height: 60px; }
+  .add-row { display: flex; gap: 8px; align-items: center; }
+  .add-row .add-field { flex: 1; margin-bottom: 0; }
+  .add-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .add-tag-btn { background: var(--bg); border: 1px solid var(--border); color: var(--text-dim); padding: 5px 12px; border-radius: 16px; font-size: 11px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .add-tag-btn:hover { border-color: var(--text-dim); }
+  .add-tag-btn.selected { border-color: var(--accent); color: var(--accent); background: #bf5af215; }
+  .add-dest-btns { display: flex; gap: 8px; }
+  .add-dest-btn { flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text-dim); padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: inherit; font-weight: 500; text-align: center; transition: all 0.15s; }
+  .add-dest-btn:hover { border-color: var(--text-dim); }
+  .add-dest-btn.selected { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+  .add-day-select { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .add-day-chip { background: var(--bg); border: 1px solid var(--border); color: var(--text-dim); padding: 4px 10px; border-radius: 14px; font-size: 11px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .add-day-chip:hover { border-color: var(--text-dim); }
+  .add-day-chip.selected { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
+  .add-time-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+  .add-time-row input { width: 80px; }
+  .add-time-row label { font-size: 11px; color: var(--text-dim); }
+  .add-allday-btn { background: var(--bg); border: 1px solid var(--border); color: var(--text-dim); padding: 5px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit; }
+  .add-allday-btn.selected { border-color: var(--accent); color: var(--accent); background: #bf5af215; }
+  .add-submit-btn { background: var(--green); color: var(--bg); border: none; padding: 10px 24px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 12px; width: 100%; }
+  .add-submit-btn:hover { opacity: 0.85; }
+  .add-backlog-cat { display: flex; flex-wrap: wrap; gap: 6px; }
+  .delete-task-btn { background: none; border: none; color: var(--red, #e55); cursor: pointer; font-size: 16px; padding: 0 4px; opacity: 0.5; }
+  .delete-task-btn:hover { opacity: 1; }
+  .task-actions { width: 24px; min-width: 24px; padding: 10px 4px; text-align: center; }
   .schedule-table td { padding: 10px 14px; vertical-align: top; }
   .schedule-table .time-col { width: 120px; font-size: 12px; color: var(--text-dim); font-weight: 500; white-space: nowrap; }
   .schedule-table .task-col { font-size: 13px; color: var(--text); }
@@ -582,6 +684,30 @@
   .backlog-card.cat-marketing::before { background: var(--accent); }
   .backlog-card.cat-inne::before { background: var(--text-muted); }
 
+  .backlog-card .backlog-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .backlog-card .backlog-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 4px;
+    font-size: 16px;
+    opacity: 0.4;
+    transition: opacity 0.15s;
+  }
+  .backlog-card .backlog-actions button:hover { opacity: 1; }
+  .backlog-card .backlog-actions .done-btn { color: var(--green); }
+  .backlog-card .backlog-actions .del-btn { color: var(--red, #e55); }
+  .backlog-card.backlog-done { opacity: 0.35; }
+  .backlog-card.backlog-done .backlog-title { text-decoration: line-through; color: var(--muted); }
+  .backlog-card.backlog-done .backlog-desc { text-decoration: line-through; color: var(--muted); }
+
   .backlog-card .backlog-title {
     font-size: 13px;
     font-weight: 600;
@@ -651,6 +777,27 @@
       <div class="date" id="clock-date">---</div>
       <div class="countdown" id="clock-countdown">---</div>
     </div>
+  </div>
+
+  <div class="modal-overlay" id="add-modal" style="display:none">
+    <div class="modal-content" id="add-modal-content"></div>
+  </div>
+
+  <div class="modal-overlay" id="confirm-modal" style="display:none">
+    <div class="modal-content" style="max-width:360px;text-align:center;">
+      <div class="confirm-icon">&#9888;</div>
+      <div class="confirm-title" id="confirm-title">Usunąć zadanie?</div>
+      <div class="confirm-desc" id="confirm-desc"></div>
+      <div class="confirm-btns">
+        <button class="confirm-cancel" id="confirm-cancel">Anuluj</button>
+        <button class="confirm-delete" id="confirm-delete">Usuń</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="undo-toast" id="undo-toast" style="display:none">
+    <span id="undo-text">Zadanie usunięte</span>
+    <button class="undo-btn" id="undo-btn">Cofnij</button>
   </div>
 
   <div class="status-bar" id="status-bar"></div>
@@ -844,15 +991,17 @@ const DAYS = [
       { time: "17:00-17:15", text: "Instantly: włącz warmup domeny auraicstudio.com", tags: ["work"], highlight: true },
       { time: "17:15-17:30", text: "Useme — przejrzyj zlecenia", tags: ["sales"] },
       { time: "17:30-18:00", text: "Sprawdź stronę Gosi — czy działa", tags: ["work"] },
-      { time: "18:00", text: "ZAMKNIJ LAPTOPA", tags: ["stop"] },
+      { time: "18:00+", text: "Ogarnąć rower dla Matiego", tags: ["personal"] },
     ] },
   { date: "2026-03-24", label: "Wt 24", title: "Wtorek 24 — Trace Ostrość montaż", type: "work",
     tasks: [
+      { time: "—", text: "Zakupy Frisco (30 min)", tags: ["personal"] },
       { time: "9:00", text: "Kłykciny", tags: ["personal"] },
       { time: "9:00-13:00", text: "Praca", tags: ["work"] },
       { time: "14:00-17:00", text: "Montaż 3 rolek Trace Ostrość", tags: ["work"], highlight: true },
-      { time: "17:00-18:00", text: "Eksperymenty z Mr Hyde — inżynier robi mix/mastering, deadline!", tags: ["work"], highlight: true },
+      { time: "17:00-18:00", text: "Eksperymenty z Mr Hyde + pobrać Mr Hyde", tags: ["work"], highlight: true },
       { time: "18:00-18:15", text: "Useme — przejrzyj zlecenia", tags: ["sales"] },
+      { time: "przed 19:00", text: "Mateusz odbiera rower", tags: ["personal"] },
       { time: "21:00", text: "Trening siłowy", tags: ["personal"] },
     ] },
   { date: "2026-03-25", label: "Śr 25", title: "Środa 25 — Meta Ads setup + Gosia", type: "work",
@@ -991,6 +1140,17 @@ const BACKLOG = [
   { cat: "tech", title: "Chatbot draggowalny", desc: "Widget chatbota AI z możliwością przeciągania po ekranie (draggable). Lepszy UX na stronach klientów — user sam ustawia gdzie mu wygodnie.", status: "idea" },
   { cat: "inne", title: "Nowe blachy do piekarnika", desc: "Kupić nowe blachy do piekarnika.", status: "todo" },
   { cat: "tech", title: "Bukmacherka AI", desc: "Zbudować bota AI do analizy zakładów bukmacherskich — analiza statystyk, predykcje, value bets, automatyczne rekomendacje.", status: "idea" },
+  { cat: "marketing", title: "Codzienny research AI do postów SM", desc: "Codziennie przeglądać nowości AI i zbierać materiał na posty social media — trendy, narzędzia, case studies.", status: "todo" },
+  { cat: "tech", title: "Sprawdzić Replit i Growth UI Analyzer", desc: "Przetestować Replit jako narzędzie + Growth UI Analyzer — ocenić przydatność.", status: "todo" },
+  { cat: "tech", title: "Skill /deploy — audyt + push + hosting", desc: "Skill który robi audyt SEO, WCAG i prędkości strony, potem push git i deploy na hosting. Pełna automatyzacja.", status: "idea" },
+  { cat: "tech", title: "Skill do poprawek na localhost", desc: "Skill do iterowania poprawek na localhoście — preview, feedback, fix loop.", status: "idea" },
+  { cat: "tech", title: "Plik .md z zasadami designów + skill", desc: "Stworzyć plik .md z najważniejszymi zasadami naszych designów. Research Perplexity + skill do tego.", status: "idea" },
+  { cat: "inne", title: "Książka Mroza dla Gosi", desc: "Ogarnąć książkę Mroza jako prezent dla Gosi.", status: "todo" },
+  { cat: "inne", title: "Spotify: Quebonaifde — Kretacz z Ciechanowa", desc: "Dodać na Spotify.", status: "todo" },
+  { cat: "tech", title: "Appka do nauki angielskiego i śpiewania", desc: "Stworzyć appkę łączącą naukę angielskiego z śpiewaniem — lyrics, wymowa, vocabulary.", status: "idea" },
+  { cat: "tech", title: "Skill development bezpieczeństwo", desc: "Skill do security — best practices, audyt bezpieczeństwa kodu, OWASP.", status: "idea" },
+  { cat: "tech", title: "Własna asystentka AI", desc: "Stworzyć własną asystentkę AI — personalizowana, kontekst Auraic, codzienne zadania.", status: "idea" },
+  { cat: "inne", title: "Sprawdzić H&M i Zara", desc: "Przejrzeć ofertę H&M i Zara.", status: "todo" },
 ];
 
 const BACKLOG_CATS = [
@@ -1172,6 +1332,12 @@ function renderStatusBar() {
     else if (todayDay.type === 'special') addPill(todayDay.typeLabel, "warning");
     else if (todayDay.type === 'flight') addPill("LOT DO TURCJI", "info");
   }
+
+  var addBtn = document.createElement('button');
+  addBtn.className = 'add-quick-btn';
+  addBtn.textContent = '+ Dodaj zadanie';
+  addBtn.addEventListener('click', openAddModal);
+  el.appendChild(addBtn);
 }
 
 function renderRules() {
@@ -1311,12 +1477,21 @@ function renderSchedule() {
   table.className = 'schedule-table';
   var tbody = document.createElement('tbody');
 
-  day.tasks.forEach(function(t) {
+  var checkedTasks = loadState('checked_' + day.date, {});
+  var hiddenTasks = loadState('hidden_' + day.date, {});
+  var customTasks = loadState('custom_' + day.date, []);
+  var allTasks = day.tasks.map(function(t, i) { return { task: t, key: 'h_' + i, custom: false }; });
+  customTasks.forEach(function(t, i) { allTasks.push({ task: t, key: 'c_' + i, custom: true, customIdx: i }); });
+  allTasks = allTasks.filter(function(item) { return !hiddenTasks[item.key]; });
+
+  allTasks.forEach(function(item) {
+    var t = item.task;
     var tr = document.createElement('tr');
+    var isChecked = checkedTasks[item.key] || false;
 
-    if (t.done) tr.classList.add('done-row');
+    if (isChecked) tr.classList.add('done-row');
 
-    if (isToday && !t.done) {
+    if (isToday && !isChecked) {
       var match = t.time.match(/^(\d+)/);
       if (match) {
         var taskHour = parseInt(match[1]);
@@ -1327,6 +1502,21 @@ function renderSchedule() {
         }
       }
     }
+
+    var tdCheck = document.createElement('td');
+    tdCheck.className = 'task-check';
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = isChecked;
+    cb.addEventListener('change', (function(dayDate, taskKey) {
+      return function() {
+        var state = loadState('checked_' + dayDate, {});
+        if (this.checked) { state[taskKey] = true; } else { delete state[taskKey]; }
+        saveState('checked_' + dayDate, state);
+        renderSchedule();
+      };
+    })(day.date, item.key));
+    tdCheck.appendChild(cb);
 
     var tdTime = document.createElement('td');
     tdTime.className = 'time-col';
@@ -1351,13 +1541,356 @@ function renderSchedule() {
       tdTask.appendChild(badge);
     });
 
+    var tdActions = document.createElement('td');
+    tdActions.className = 'task-actions';
+    var delBtn = document.createElement('button');
+    delBtn.className = 'delete-task-btn';
+    delBtn.textContent = '\u00d7';
+    delBtn.title = 'Usuń zadanie';
+    if (item.custom) {
+      delBtn.addEventListener('click', (function(dayDate, ci, taskText) {
+        return function() {
+          confirmDelete(taskText, function() {
+            var ct = loadState('custom_' + dayDate, []);
+            var removed = ct.splice(ci, 1)[0];
+            saveState('custom_' + dayDate, ct);
+            lastDeleted = { undo: function() {
+              var ct2 = loadState('custom_' + dayDate, []);
+              ct2.splice(ci, 0, removed);
+              saveState('custom_' + dayDate, ct2);
+              renderSchedule();
+            }};
+            renderSchedule();
+          });
+        };
+      })(day.date, item.customIdx, t.text));
+    } else {
+      delBtn.addEventListener('click', (function(dayDate, taskKey, taskText) {
+        return function() {
+          confirmDelete(taskText, function() {
+            var hidden = loadState('hidden_' + dayDate, {});
+            hidden[taskKey] = true;
+            saveState('hidden_' + dayDate, hidden);
+            lastDeleted = { undo: function() {
+              var hidden2 = loadState('hidden_' + dayDate, {});
+              delete hidden2[taskKey];
+              saveState('hidden_' + dayDate, hidden2);
+              renderSchedule();
+            }};
+            renderSchedule();
+          });
+        };
+      })(day.date, item.key, t.text));
+    }
+    tdActions.appendChild(delBtn);
+
+    tr.appendChild(tdCheck);
     tr.appendChild(tdTime);
     tr.appendChild(tdTask);
+    tr.appendChild(tdActions);
     tbody.appendChild(tr);
   });
 
   table.appendChild(tbody);
   container.appendChild(table);
+
+}
+
+var undoTimer = null;
+var lastDeleted = null;
+
+function confirmDelete(taskName, onConfirm) {
+  var modal = document.getElementById('confirm-modal');
+  document.getElementById('confirm-desc').textContent = '"' + taskName + '"';
+  modal.style.display = 'flex';
+
+  var cancelBtn = document.getElementById('confirm-cancel');
+  var deleteBtn = document.getElementById('confirm-delete');
+
+  function cleanup() {
+    modal.style.display = 'none';
+    cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+    deleteBtn.replaceWith(deleteBtn.cloneNode(true));
+  }
+
+  cancelBtn.addEventListener('click', cleanup);
+  modal.addEventListener('click', function(e) { if (e.target === modal) cleanup(); });
+  deleteBtn.addEventListener('click', function() {
+    cleanup();
+    onConfirm();
+    showUndoToast(taskName);
+  });
+}
+
+function showUndoToast(taskName) {
+  var toast = document.getElementById('undo-toast');
+  document.getElementById('undo-text').textContent = 'Usunięto: ' + taskName;
+  toast.style.display = 'flex';
+
+  if (undoTimer) clearTimeout(undoTimer);
+  undoTimer = setTimeout(function() {
+    toast.style.display = 'none';
+    lastDeleted = null;
+  }, 6000);
+
+  var undoBtn = document.getElementById('undo-btn');
+  var newBtn = undoBtn.cloneNode(true);
+  undoBtn.parentNode.replaceChild(newBtn, undoBtn);
+  newBtn.addEventListener('click', function() {
+    if (lastDeleted) {
+      lastDeleted.undo();
+      lastDeleted = null;
+    }
+    toast.style.display = 'none';
+    if (undoTimer) clearTimeout(undoTimer);
+  });
+}
+
+function openAddModal() {
+  var modal = document.getElementById('add-modal');
+  var content = document.getElementById('add-modal-content');
+  while (content.firstChild) content.removeChild(content.firstChild);
+
+  var closeBtn = document.createElement('button');
+  closeBtn.className = 'modal-close';
+  closeBtn.textContent = '\u00d7';
+  closeBtn.addEventListener('click', function() { modal.style.display = 'none'; });
+  content.appendChild(closeBtn);
+
+  var panel = buildAddPanel(DAYS[selectedDay], true);
+  panel.style.background = 'none';
+  panel.style.border = 'none';
+  panel.style.padding = '0';
+  content.appendChild(panel);
+
+  modal.style.display = 'flex';
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) modal.style.display = 'none';
+  });
+}
+
+function buildAddPanel(currentDay, isModal) {
+  var panel = document.createElement('div');
+  panel.className = 'add-panel';
+
+  var title = document.createElement('div');
+  title.className = 'add-panel-title';
+  title.textContent = 'DODAJ ZADANIE';
+  panel.appendChild(title);
+
+  // Task name
+  var nameField = document.createElement('div');
+  nameField.className = 'add-field';
+  var nameLabel = document.createElement('label');
+  nameLabel.textContent = 'Zadanie';
+  var nameInput = document.createElement('input');
+  nameInput.type = 'text';
+  nameInput.placeholder = 'Co chcesz zrobić?';
+  nameField.appendChild(nameLabel);
+  nameField.appendChild(nameInput);
+  panel.appendChild(nameField);
+
+  // Tag selection
+  var tagField = document.createElement('div');
+  tagField.className = 'add-field';
+  var tagLabel = document.createElement('label');
+  tagLabel.textContent = 'Kategoria';
+  tagField.appendChild(tagLabel);
+  var tagContainer = document.createElement('div');
+  tagContainer.className = 'add-tags';
+  var schedTags = [
+    { id: 'personal', label: 'Personal' },
+    { id: 'work', label: 'Work' },
+    { id: 'sales', label: 'Sales' },
+  ];
+  var backlogCats = [
+    { id: 'sprzedaz', label: 'Sprzedaż' },
+    { id: 'auraic', label: 'Auraic' },
+    { id: 'marketing', label: 'Marketing' },
+    { id: 'tech', label: 'Tech' },
+    { id: 'inne', label: 'Inne' },
+  ];
+  var selectedTag = { value: 'personal' };
+  var selectedCat = { value: 'inne' };
+  var tagBtns = [];
+  var catBtns = [];
+
+  schedTags.forEach(function(st) {
+    var btn = document.createElement('button');
+    btn.className = 'add-tag-btn' + (st.id === selectedTag.value ? ' selected' : '');
+    btn.textContent = st.label;
+    btn.addEventListener('click', function() {
+      selectedTag.value = st.id;
+      tagBtns.forEach(function(b, i) { b.className = 'add-tag-btn' + (schedTags[i].id === st.id ? ' selected' : ''); });
+    });
+    tagBtns.push(btn);
+    tagContainer.appendChild(btn);
+  });
+  tagField.appendChild(tagContainer);
+
+  // Backlog categories (hidden initially)
+  var catContainer = document.createElement('div');
+  catContainer.className = 'add-backlog-cat';
+  catContainer.style.display = 'none';
+  catContainer.style.marginTop = '8px';
+  backlogCats.forEach(function(bc) {
+    var btn = document.createElement('button');
+    btn.className = 'add-tag-btn' + (bc.id === selectedCat.value ? ' selected' : '');
+    btn.textContent = bc.label;
+    btn.addEventListener('click', function() {
+      selectedCat.value = bc.id;
+      catBtns.forEach(function(b, i) { b.className = 'add-tag-btn' + (backlogCats[i].id === bc.id ? ' selected' : ''); });
+    });
+    catBtns.push(btn);
+    catContainer.appendChild(btn);
+  });
+  tagField.appendChild(catContainer);
+  panel.appendChild(tagField);
+
+  // Destination: day or backlog
+  var destField = document.createElement('div');
+  destField.className = 'add-field';
+  var destLabel = document.createElement('label');
+  destLabel.textContent = 'Gdzie dodać?';
+  destField.appendChild(destLabel);
+  var destBtns = document.createElement('div');
+  destBtns.className = 'add-dest-btns';
+  var dest = { value: 'day' };
+
+  var dayDestBtn = document.createElement('button');
+  dayDestBtn.className = 'add-dest-btn selected';
+  dayDestBtn.textContent = 'Harmonogram';
+  var backlogDestBtn = document.createElement('button');
+  backlogDestBtn.className = 'add-dest-btn';
+  backlogDestBtn.textContent = 'Backlog';
+
+  // Day picker
+  var dayPicker = document.createElement('div');
+  dayPicker.className = 'add-day-select';
+  var selectedDayDate = { value: currentDay.date };
+  var dayChips = [];
+
+  DAYS.forEach(function(d) {
+    var chip = document.createElement('button');
+    chip.className = 'add-day-chip' + (d.date === currentDay.date ? ' selected' : '');
+    chip.textContent = d.label;
+    chip.addEventListener('click', function() {
+      selectedDayDate.value = d.date;
+      dayChips.forEach(function(c) { c.className = 'add-day-chip'; });
+      chip.className = 'add-day-chip selected';
+    });
+    dayChips.push(chip);
+    dayPicker.appendChild(chip);
+  });
+
+  // Time row
+  var timeRow = document.createElement('div');
+  timeRow.className = 'add-time-row';
+  var timeInput = document.createElement('input');
+  timeInput.type = 'text';
+  timeInput.placeholder = '14:00';
+  timeInput.style.cssText = 'width:80px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-size:16px;font-family:inherit;';
+  var timeDash = document.createElement('span');
+  timeDash.textContent = '—';
+  timeDash.style.color = 'var(--text-dim)';
+  var timeEndInput = document.createElement('input');
+  timeEndInput.type = 'text';
+  timeEndInput.placeholder = '15:00';
+  timeEndInput.style.cssText = 'width:80px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-size:16px;font-family:inherit;';
+  var allDayBtn = document.createElement('button');
+  allDayBtn.className = 'add-allday-btn';
+  allDayBtn.textContent = 'Cały dzień';
+  var isAllDay = { value: false };
+  allDayBtn.addEventListener('click', function() {
+    isAllDay.value = !isAllDay.value;
+    allDayBtn.className = 'add-allday-btn' + (isAllDay.value ? ' selected' : '');
+    timeInput.disabled = isAllDay.value;
+    timeEndInput.disabled = isAllDay.value;
+    if (isAllDay.value) { timeInput.value = ''; timeEndInput.value = ''; }
+  });
+  timeRow.appendChild(timeInput);
+  timeRow.appendChild(timeDash);
+  timeRow.appendChild(timeEndInput);
+  timeRow.appendChild(allDayBtn);
+
+  // Description field (for backlog)
+  var descField = document.createElement('div');
+  descField.className = 'add-field';
+  descField.style.display = 'none';
+  var descLabel = document.createElement('label');
+  descLabel.textContent = 'Opis (opcjonalny)';
+  var descInput = document.createElement('textarea');
+  descInput.placeholder = 'Szczegóły zadania...';
+  descField.appendChild(descLabel);
+  descField.appendChild(descInput);
+
+  function showDayMode() {
+    dest.value = 'day';
+    dayDestBtn.className = 'add-dest-btn selected';
+    backlogDestBtn.className = 'add-dest-btn';
+    dayPicker.style.display = 'flex';
+    timeRow.style.display = 'flex';
+    descField.style.display = 'none';
+    tagContainer.style.display = 'flex';
+    catContainer.style.display = 'none';
+  }
+  function showBacklogMode() {
+    dest.value = 'backlog';
+    backlogDestBtn.className = 'add-dest-btn selected';
+    dayDestBtn.className = 'add-dest-btn';
+    dayPicker.style.display = 'none';
+    timeRow.style.display = 'none';
+    descField.style.display = 'block';
+    tagContainer.style.display = 'none';
+    catContainer.style.display = 'flex';
+  }
+
+  dayDestBtn.addEventListener('click', showDayMode);
+  backlogDestBtn.addEventListener('click', showBacklogMode);
+  destBtns.appendChild(dayDestBtn);
+  destBtns.appendChild(backlogDestBtn);
+  destField.appendChild(destBtns);
+  destField.appendChild(dayPicker);
+  destField.appendChild(timeRow);
+  panel.appendChild(destField);
+  panel.appendChild(descField);
+
+  // Submit
+  var submitBtn = document.createElement('button');
+  submitBtn.className = 'add-submit-btn';
+  submitBtn.textContent = 'Dodaj zadanie';
+  submitBtn.addEventListener('click', function() {
+    var text = nameInput.value.trim();
+    if (!text) return;
+
+    if (dest.value === 'day') {
+      var timeStr = '—';
+      if (!isAllDay.value && timeInput.value.trim()) {
+        timeStr = timeInput.value.trim();
+        if (timeEndInput.value.trim()) timeStr += '-' + timeEndInput.value.trim();
+      }
+      var ct = loadState('custom_' + selectedDayDate.value, []);
+      ct.push({ time: timeStr, text: text, tags: [selectedTag.value], highlight: selectedTag.value === 'work' || selectedTag.value === 'sales' });
+      saveState('custom_' + selectedDayDate.value, ct);
+      var targetIdx = DAYS.findIndex(function(d) { return d.date === selectedDayDate.value; });
+      if (targetIdx >= 0) { selectedDay = targetIdx; renderDayNav(); }
+      renderSchedule();
+      document.getElementById('add-modal').style.display = 'none';
+    } else {
+      var cb = loadState('custom_backlog', []);
+      cb.push({ cat: selectedCat.value, title: text, desc: descInput.value.trim() || text, status: 'todo' });
+      saveState('custom_backlog', cb);
+      nameInput.value = '';
+      descInput.value = '';
+      renderBacklog();
+      renderBacklogTabs();
+      document.getElementById('add-modal').style.display = 'none';
+    }
+  });
+  nameInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') submitBtn.click(); });
+  panel.appendChild(submitBtn);
+
+  return panel;
 }
 
 function renderNotInPlan() {
@@ -1417,12 +1950,41 @@ function toggleChecklist(i) {
   renderChecklist();
 }
 
+function getBacklogState() {
+  var customBacklog = loadState('custom_backlog', []);
+  var doneBacklog = loadState('backlog_done', {});
+  var hiddenBacklog = loadState('backlog_hidden', {});
+  var all = [];
+  BACKLOG.forEach(function(b, i) {
+    var key = 'h_' + i;
+    all.push({ item: b, key: key, custom: false, customIdx: null, done: !!doneBacklog[key], hidden: !!hiddenBacklog[key] });
+  });
+  customBacklog.forEach(function(b, i) {
+    var key = 'c_' + i;
+    all.push({ item: b, key: key, custom: true, customIdx: i, done: !!doneBacklog[key], hidden: !!hiddenBacklog[key] });
+  });
+  return all;
+}
+
 function renderBacklogTabs() {
   var el = document.getElementById('backlog-tabs');
   while (el.firstChild) el.removeChild(el.firstChild);
 
-  BACKLOG_CATS.forEach(function(cat) {
-    var count = cat.id === 'all' ? BACKLOG.length : BACKLOG.filter(function(b) { return b.cat === cat.id; }).length;
+  var state = getBacklogState();
+  var active = state.filter(function(s) { return !s.done && !s.hidden; });
+  var done = state.filter(function(s) { return s.done && !s.hidden; });
+
+  var allCats = BACKLOG_CATS.concat([{ id: '_done', label: 'Skończone' }]);
+
+  allCats.forEach(function(cat) {
+    var count;
+    if (cat.id === '_done') {
+      count = done.length;
+    } else if (cat.id === 'all') {
+      count = active.length;
+    } else {
+      count = active.filter(function(s) { return s.item.cat === cat.id; }).length;
+    }
     var btn = document.createElement('button');
     btn.className = 'backlog-tab' + (selectedBacklogCat === cat.id ? ' active' : '');
     btn.textContent = cat.label;
@@ -1443,11 +2005,104 @@ function renderBacklog() {
   var el = document.getElementById('backlog-list');
   while (el.firstChild) el.removeChild(el.firstChild);
 
-  var items = selectedBacklogCat === 'all' ? BACKLOG : BACKLOG.filter(function(b) { return b.cat === selectedBacklogCat; });
+  var state = getBacklogState();
+  var items;
 
-  items.forEach(function(item) {
+  if (selectedBacklogCat === '_done') {
+    items = state.filter(function(s) { return s.done && !s.hidden; });
+  } else {
+    var active = state.filter(function(s) { return !s.done && !s.hidden; });
+    items = selectedBacklogCat === 'all' ? active : active.filter(function(s) { return s.item.cat === selectedBacklogCat; });
+  }
+
+  if (items.length === 0) {
+    var empty = document.createElement('div');
+    empty.style.cssText = 'color:var(--text-dim);font-size:13px;padding:20px 0;text-align:center;';
+    empty.textContent = selectedBacklogCat === '_done' ? 'Brak skończonych zadań' : 'Brak zadań w tej kategorii';
+    el.appendChild(empty);
+    return;
+  }
+
+  items.forEach(function(entry) {
+    var item = entry.item;
     var card = document.createElement('div');
     card.className = 'backlog-card cat-' + item.cat;
+    if (entry.done) card.classList.add('backlog-done');
+
+    // Actions (top right)
+    var actions = document.createElement('div');
+    actions.className = 'backlog-actions';
+
+    if (!entry.done) {
+      var doneBtn = document.createElement('button');
+      doneBtn.className = 'done-btn';
+      doneBtn.textContent = '\u2713';
+      doneBtn.title = 'Oznacz jako skończone';
+      doneBtn.addEventListener('click', (function(key) {
+        return function(e) {
+          e.stopPropagation();
+          var d = loadState('backlog_done', {});
+          d[key] = true;
+          saveState('backlog_done', d);
+          renderBacklog();
+          renderBacklogTabs();
+        };
+      })(entry.key));
+      actions.appendChild(doneBtn);
+    } else {
+      var undoBtn = document.createElement('button');
+      undoBtn.className = 'done-btn';
+      undoBtn.textContent = '\u21a9';
+      undoBtn.title = 'Przywróć';
+      undoBtn.addEventListener('click', (function(key) {
+        return function(e) {
+          e.stopPropagation();
+          var d = loadState('backlog_done', {});
+          delete d[key];
+          saveState('backlog_done', d);
+          renderBacklog();
+          renderBacklogTabs();
+        };
+      })(entry.key));
+      actions.appendChild(undoBtn);
+    }
+
+    var delBtn = document.createElement('button');
+    delBtn.className = 'del-btn';
+    delBtn.textContent = '\u00d7';
+    delBtn.title = 'Usuń';
+    delBtn.addEventListener('click', (function(ent) {
+      return function(e) {
+        e.stopPropagation();
+        confirmDelete(ent.item.title, function() {
+          if (ent.custom) {
+            var cb = loadState('custom_backlog', []);
+            var removed = cb.splice(ent.customIdx, 1)[0];
+            saveState('custom_backlog', cb);
+            lastDeleted = { undo: function() {
+              var cb2 = loadState('custom_backlog', []);
+              cb2.splice(ent.customIdx, 0, removed);
+              saveState('custom_backlog', cb2);
+              renderBacklog(); renderBacklogTabs();
+            }};
+          } else {
+            var h = loadState('backlog_hidden', {});
+            h[ent.key] = true;
+            saveState('backlog_hidden', h);
+            lastDeleted = { undo: function() {
+              var h2 = loadState('backlog_hidden', {});
+              delete h2[ent.key];
+              saveState('backlog_hidden', h2);
+              renderBacklog(); renderBacklogTabs();
+            }};
+          }
+          renderBacklog();
+          renderBacklogTabs();
+        });
+      };
+    })(entry));
+    actions.appendChild(delBtn);
+    card.appendChild(actions);
 
     var title = document.createElement('div');
     title.className = 'backlog-title';
