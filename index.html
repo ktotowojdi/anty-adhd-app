@@ -1184,9 +1184,8 @@ const DAYS_PL = ["Niedziela","Poniedziałek","Wtorek","Środa","Czwartek","Piąt
 const MONTHS_PL = ["stycznia","lutego","marca","kwietnia","maja","czerwca","lipca","sierpnia","września","października","listopada","grudnia"];
 
 // State & Sync
-var API_BASE = location.hostname === 'adhd.auraic-studio.com' ? '' : '';
-var SYNC_URL = location.hostname === 'localhost' || location.hostname === '127.0.0.1'
-  ? '' : '/api/state';
+var SYNC_URL = '/api/state';
+var lastServerVersion = 0;
 
 function loadState(key, fallback) {
   try { var v = localStorage.getItem('adhd_' + key); return v ? JSON.parse(v) : fallback; }
@@ -1197,42 +1196,60 @@ function saveState(key, val) {
   syncToServer();
 }
 
+// Collect ALL adhd_* keys from localStorage
+function getAllLocalState() {
+  var state = {};
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    if (k.indexOf('adhd_') === 0) {
+      try { state[k] = JSON.parse(localStorage.getItem(k)); }
+      catch(e) { state[k] = localStorage.getItem(k); }
+    }
+  }
+  return state;
+}
+
 var syncTimeout = null;
 function syncToServer() {
-  if (!SYNC_URL) return;
   clearTimeout(syncTimeout);
   syncTimeout = setTimeout(function() {
-    var state = {
-      priorities: priorityState,
-      checklist: checklistState
-    };
     fetch(SYNC_URL, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(state)
+      body: JSON.stringify(getAllLocalState())
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      if (d && d.version) lastServerVersion = d.version;
     }).catch(function() {});
   }, 500);
 }
 
 function syncFromServer() {
-  if (!SYNC_URL) return;
-  fetch(SYNC_URL).then(function(r) { return r.json(); }).then(function(data) {
-    if (data && data.version) {
-      var changed = false;
-      if (data.priorities && JSON.stringify(data.priorities) !== JSON.stringify(priorityState)) {
-        priorityState = data.priorities;
-        localStorage.setItem('adhd_priorities', JSON.stringify(priorityState));
+  fetch(SYNC_URL).then(function(r) { return r.json(); }).then(function(resp) {
+    if (!resp || !resp.version || resp.version <= lastServerVersion) return;
+    lastServerVersion = resp.version;
+    var data = resp.data;
+    if (!data) return;
+
+    var changed = false;
+    // Write all server keys to localStorage
+    Object.keys(data).forEach(function(k) {
+      var local = localStorage.getItem(k);
+      var remote = JSON.stringify(data[k]);
+      if (local !== remote) {
+        localStorage.setItem(k, remote);
         changed = true;
       }
-      if (data.checklist && JSON.stringify(data.checklist) !== JSON.stringify(checklistState)) {
-        checklistState = data.checklist;
-        localStorage.setItem('adhd_checklist', JSON.stringify(checklistState));
-        changed = true;
-      }
-      if (changed) {
-        renderPriorities();
-        renderChecklist();
-      }
+    });
+
+    if (changed) {
+      // Reload state vars and re-render
+      priorityState = loadState('priorities', [false, false, false, false]);
+      checklistState = loadState('checklist', CHECKLIST_ITEMS.map(function() { return false; }));
+      renderPriorities();
+      renderChecklist();
+      renderSchedule();
+      renderBacklogTabs();
+      renderBacklog();
     }
   }).catch(function() {});
 }
