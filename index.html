@@ -145,6 +145,23 @@
   .confirm-cancel:hover { background: var(--surface-hover); }
   .confirm-delete { flex: 1; background: var(--red, #e55); border: none; color: #fff; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
   .confirm-delete:hover { opacity: 0.85; }
+  .edit-btn { color: var(--text-dim); }
+  .edit-btn:hover { color: var(--blue); }
+  .edit-field { margin-bottom: 14px; }
+  .edit-field label { display: block; font-size: 11px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .edit-field input, .edit-field textarea, .edit-field select {
+    width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    padding: 10px 12px; border-radius: 6px; font-size: 16px; font-family: inherit; outline: none;
+  }
+  .edit-field input:focus, .edit-field textarea:focus, .edit-field select:focus { border-color: var(--blue); }
+  .edit-field textarea { resize: vertical; min-height: 60px; }
+  .edit-field select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238a8a8e' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+  .edit-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .edit-save-btn {
+    width: 100%; background: var(--blue); color: #fff; border: none; padding: 12px;
+    border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 8px;
+  }
+  .edit-save-btn:hover { opacity: 0.85; }
   .undo-toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
     background: var(--card); border: 1px solid var(--border); border-radius: 8px;
@@ -781,6 +798,10 @@
 
   <div class="modal-overlay" id="add-modal" style="display:none">
     <div class="modal-content" id="add-modal-content"></div>
+  </div>
+
+  <div class="modal-overlay" id="edit-modal" style="display:none">
+    <div class="modal-content" id="edit-modal-content"></div>
   </div>
 
   <div class="modal-overlay" id="confirm-modal" style="display:none">
@@ -1497,7 +1518,11 @@ function renderSchedule() {
   var checkedTasks = loadState('checked_' + day.date, {});
   var hiddenTasks = loadState('hidden_' + day.date, {});
   var customTasks = loadState('custom_' + day.date, []);
-  var allTasks = day.tasks.map(function(t, i) { return { task: t, key: 'h_' + i, custom: false }; });
+  var overrides = loadState('override_' + day.date, {});
+  var allTasks = day.tasks.map(function(t, i) {
+    var key = 'h_' + i;
+    return { task: overrides[key] || t, key: key, custom: false };
+  });
   customTasks.forEach(function(t, i) { allTasks.push({ task: t, key: 'c_' + i, custom: true, customIdx: i }); });
   allTasks = allTasks.filter(function(item) { return !hiddenTasks[item.key]; });
 
@@ -1560,6 +1585,17 @@ function renderSchedule() {
 
     var tdActions = document.createElement('td');
     tdActions.className = 'task-actions';
+    var editBtn = document.createElement('button');
+    editBtn.className = 'delete-task-btn edit-btn';
+    editBtn.textContent = '\u270E';
+    editBtn.title = 'Edytuj zadanie';
+    editBtn.addEventListener('click', (function(dayDate, taskKey, isCustom, ci) {
+      return function(e) {
+        e.stopPropagation();
+        editScheduleTask(dayDate, taskKey, isCustom, ci);
+      };
+    })(day.date, item.key, item.custom, item.customIdx));
+    tdActions.appendChild(editBtn);
     var delBtn = document.createElement('button');
     delBtn.className = 'delete-task-btn';
     delBtn.textContent = '\u00d7';
@@ -1660,6 +1696,255 @@ function showUndoToast(taskName) {
     }
     toast.style.display = 'none';
     if (undoTimer) clearTimeout(undoTimer);
+  });
+}
+
+function openEditModal(buildContentFn) {
+  var modal = document.getElementById('edit-modal');
+  var content = document.getElementById('edit-modal-content');
+  while (content.firstChild) content.removeChild(content.firstChild);
+
+  var closeBtn = document.createElement('button');
+  closeBtn.className = 'modal-close';
+  closeBtn.textContent = '\u00d7';
+  closeBtn.addEventListener('click', function() { modal.style.display = 'none'; });
+  content.appendChild(closeBtn);
+
+  var title = document.createElement('div');
+  title.className = 'add-panel-title';
+  title.textContent = 'EDYTUJ ZADANIE';
+  content.appendChild(title);
+
+  buildContentFn(content, function() { modal.style.display = 'none'; });
+
+  modal.style.display = 'flex';
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) modal.style.display = 'none';
+  });
+}
+
+function editScheduleTask(dayDate, taskKey, isCustom, customIdx) {
+  var task;
+  if (isCustom) {
+    var ct = loadState('custom_' + dayDate, []);
+    task = ct[customIdx];
+  } else {
+    var dayIdx = DAYS.findIndex(function(d) { return d.date === dayDate; });
+    var hIdx = parseInt(taskKey.split('_')[1]);
+    task = DAYS[dayIdx].tasks[hIdx];
+  }
+  if (!task) return;
+
+  openEditModal(function(container, closeModal) {
+    // Text
+    var textField = document.createElement('div');
+    textField.className = 'edit-field';
+    var textLabel = document.createElement('label');
+    textLabel.textContent = 'Zadanie';
+    var textInput = document.createElement('input');
+    textInput.type = 'text';
+    textInput.value = task.text;
+    textField.appendChild(textLabel);
+    textField.appendChild(textInput);
+    container.appendChild(textField);
+
+    // Time
+    var timeField = document.createElement('div');
+    timeField.className = 'edit-field';
+    var timeLabel = document.createElement('label');
+    timeLabel.textContent = 'Czas';
+    var timeInput = document.createElement('input');
+    timeInput.type = 'text';
+    timeInput.value = task.time;
+    timeInput.placeholder = '14:00-15:00';
+    timeField.appendChild(timeLabel);
+    timeField.appendChild(timeInput);
+    container.appendChild(timeField);
+
+    // Tags
+    var tagField = document.createElement('div');
+    tagField.className = 'edit-field';
+    var tagLabel = document.createElement('label');
+    tagLabel.textContent = 'Kategoria';
+    tagField.appendChild(tagLabel);
+    var tagContainer = document.createElement('div');
+    tagContainer.className = 'edit-tags';
+    var schedTags = ['personal', 'work', 'sales'];
+    var selectedTag = { value: (task.tags && task.tags[0]) || 'personal' };
+    var tagBtns = [];
+    schedTags.forEach(function(tag) {
+      var btn = document.createElement('button');
+      btn.className = 'add-tag-btn' + (selectedTag.value === tag ? ' selected' : '');
+      btn.textContent = tag.charAt(0).toUpperCase() + tag.slice(1);
+      btn.addEventListener('click', function() {
+        selectedTag.value = tag;
+        tagBtns.forEach(function(b, i) { b.className = 'add-tag-btn' + (schedTags[i] === tag ? ' selected' : ''); });
+      });
+      tagBtns.push(btn);
+      tagContainer.appendChild(btn);
+    });
+    tagField.appendChild(tagContainer);
+    container.appendChild(tagField);
+
+    // Save
+    var saveBtn = document.createElement('button');
+    saveBtn.className = 'edit-save-btn';
+    saveBtn.textContent = 'Zapisz zmiany';
+    saveBtn.addEventListener('click', function() {
+      var newText = textInput.value.trim();
+      if (!newText) return;
+
+      if (isCustom) {
+        var ct = loadState('custom_' + dayDate, []);
+        ct[customIdx] = {
+          time: timeInput.value.trim() || '\u2014',
+          text: newText,
+          tags: [selectedTag.value],
+          highlight: selectedTag.value === 'work' || selectedTag.value === 'sales'
+        };
+        saveState('custom_' + dayDate, ct);
+      } else {
+        // Hardcoded tasks — save edit as override in localStorage
+        var overrides = loadState('override_' + dayDate, {});
+        overrides[taskKey] = {
+          time: timeInput.value.trim() || task.time,
+          text: newText,
+          tags: [selectedTag.value],
+          highlight: selectedTag.value === 'work' || selectedTag.value === 'sales'
+        };
+        saveState('override_' + dayDate, overrides);
+      }
+      closeModal();
+      renderSchedule();
+    });
+    container.appendChild(saveBtn);
+
+    setTimeout(function() { textInput.focus(); textInput.select(); }, 100);
+  });
+}
+
+function editBacklogTask(entryKey, isCustom, customIdx) {
+  var item;
+  if (isCustom) {
+    var cb = loadState('custom_backlog', []);
+    item = cb[customIdx];
+  } else {
+    var hIdx = parseInt(entryKey.split('_')[1]);
+    item = BACKLOG[hIdx];
+  }
+  if (!item) return;
+
+  openEditModal(function(container, closeModal) {
+    // Title
+    var titleField = document.createElement('div');
+    titleField.className = 'edit-field';
+    var titleLabel = document.createElement('label');
+    titleLabel.textContent = 'Tytuł';
+    var titleInput = document.createElement('input');
+    titleInput.type = 'text';
+    titleInput.value = item.title;
+    titleField.appendChild(titleLabel);
+    titleField.appendChild(titleInput);
+    container.appendChild(titleField);
+
+    // Description
+    var descField = document.createElement('div');
+    descField.className = 'edit-field';
+    var descLabel = document.createElement('label');
+    descLabel.textContent = 'Opis';
+    var descInput = document.createElement('textarea');
+    descInput.value = item.desc || '';
+    descField.appendChild(descLabel);
+    descField.appendChild(descInput);
+    container.appendChild(descField);
+
+    // Category
+    var catField = document.createElement('div');
+    catField.className = 'edit-field';
+    var catLabel = document.createElement('label');
+    catLabel.textContent = 'Kategoria';
+    catField.appendChild(catLabel);
+    var catContainer = document.createElement('div');
+    catContainer.className = 'edit-tags';
+    var cats = ['sprzedaz', 'auraic', 'marketing', 'tech', 'inne'];
+    var catLabels = { sprzedaz: 'Sprzedaż', auraic: 'Auraic', marketing: 'Marketing', tech: 'Tech', inne: 'Inne' };
+    var selectedCat = { value: item.cat || 'inne' };
+    var catBtns = [];
+    cats.forEach(function(cat) {
+      var btn = document.createElement('button');
+      btn.className = 'add-tag-btn' + (selectedCat.value === cat ? ' selected' : '');
+      btn.textContent = catLabels[cat];
+      btn.addEventListener('click', function() {
+        selectedCat.value = cat;
+        catBtns.forEach(function(b, i) { b.className = 'add-tag-btn' + (cats[i] === cat ? ' selected' : ''); });
+      });
+      catBtns.push(btn);
+      catContainer.appendChild(btn);
+    });
+    catField.appendChild(catContainer);
+    container.appendChild(catField);
+
+    // Status
+    var statusField = document.createElement('div');
+    statusField.className = 'edit-field';
+    var statusLabel = document.createElement('label');
+    statusLabel.textContent = 'Status';
+    statusField.appendChild(statusLabel);
+    var statusContainer = document.createElement('div');
+    statusContainer.className = 'edit-tags';
+    var statuses = ['todo', 'waiting', 'blocked', 'idea'];
+    var selectedStatus = { value: item.status || 'todo' };
+    var statusBtns = [];
+    statuses.forEach(function(st) {
+      var btn = document.createElement('button');
+      btn.className = 'add-tag-btn' + (selectedStatus.value === st ? ' selected' : '');
+      btn.textContent = STATUS_LABELS[st] || st;
+      btn.addEventListener('click', function() {
+        selectedStatus.value = st;
+        statusBtns.forEach(function(b, i) { b.className = 'add-tag-btn' + (statuses[i] === st ? ' selected' : ''); });
+      });
+      statusBtns.push(btn);
+      statusContainer.appendChild(btn);
+    });
+    statusField.appendChild(statusContainer);
+    container.appendChild(statusField);
+
+    // Save
+    var saveBtn = document.createElement('button');
+    saveBtn.className = 'edit-save-btn';
+    saveBtn.textContent = 'Zapisz zmiany';
+    saveBtn.addEventListener('click', function() {
+      var newTitle = titleInput.value.trim();
+      if (!newTitle) return;
+
+      if (isCustom) {
+        var cb = loadState('custom_backlog', []);
+        cb[customIdx] = {
+          cat: selectedCat.value,
+          title: newTitle,
+          desc: descInput.value.trim() || newTitle,
+          status: selectedStatus.value,
+          note: item.note || ''
+        };
+        saveState('custom_backlog', cb);
+      } else {
+        var overrides = loadState('backlog_overrides', {});
+        overrides[entryKey] = {
+          cat: selectedCat.value,
+          title: newTitle,
+          desc: descInput.value.trim() || newTitle,
+          status: selectedStatus.value,
+          note: item.note || ''
+        };
+        saveState('backlog_overrides', overrides);
+      }
+      closeModal();
+      renderBacklog();
+      renderBacklogTabs();
+    });
+    container.appendChild(saveBtn);
+
+    setTimeout(function() { titleInput.focus(); titleInput.select(); }, 100);
   });
 }
 
@@ -1971,10 +2256,11 @@ function getBacklogState() {
   var customBacklog = loadState('custom_backlog', []);
   var doneBacklog = loadState('backlog_done', {});
   var hiddenBacklog = loadState('backlog_hidden', {});
+  var backlogOverrides = loadState('backlog_overrides', {});
   var all = [];
   BACKLOG.forEach(function(b, i) {
     var key = 'h_' + i;
-    all.push({ item: b, key: key, custom: false, customIdx: null, done: !!doneBacklog[key], hidden: !!hiddenBacklog[key] });
+    all.push({ item: backlogOverrides[key] || b, key: key, custom: false, customIdx: null, done: !!doneBacklog[key], hidden: !!hiddenBacklog[key] });
   });
   customBacklog.forEach(function(b, i) {
     var key = 'c_' + i;
@@ -2049,6 +2335,18 @@ function renderBacklog() {
     // Actions (top right)
     var actions = document.createElement('div');
     actions.className = 'backlog-actions';
+
+    var editBlogBtn = document.createElement('button');
+    editBlogBtn.className = 'edit-btn';
+    editBlogBtn.textContent = '\u270E';
+    editBlogBtn.title = 'Edytuj';
+    editBlogBtn.addEventListener('click', (function(ent) {
+      return function(e) {
+        e.stopPropagation();
+        editBacklogTask(ent.key, ent.custom, ent.customIdx);
+      };
+    })(entry));
+    actions.appendChild(editBlogBtn);
 
     if (!entry.done) {
       var doneBtn = document.createElement('button');
