@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '../../lib/api';
 import { useAppStore } from '../../stores/appStore';
 import BacklogCard from './BacklogCard';
@@ -17,61 +17,78 @@ const CATEGORIES = [
   { id: 'inne', label: 'Inne' },
 ];
 
-const STATUS_TABS = [
-  { id: 'active', label: 'Aktywne' },
-  { id: 'done', label: 'Skończone' },
+const STATUS_FILTERS = [
+  { id: 'all', label: 'Wszystkie' },
+  { id: 'todo', label: 'Todo' },
+  { id: 'waiting', label: 'Czekające' },
+  { id: 'blocked', label: 'Zablokowane' },
+  { id: 'idea', label: 'Pomysły' },
+];
+
+const SORT_OPTIONS = [
+  { id: 'newest', label: 'Najnowsze' },
+  { id: 'oldest', label: 'Najstarsze' },
+  { id: 'alpha', label: 'A → Z' },
 ];
 
 export default function BacklogPage() {
   const showToast = useAppStore(s => s.showToast);
   const [items, setItems] = useState([]);
   const [category, setCategory] = useState('all');
-  const [statusTab, setStatusTab] = useState('active');
+  const [doneTab, setDoneTab] = useState('active');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
+  const [search, setSearch] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [total, setTotal] = useState(0);
   const [showAdd, setShowAdd] = useState(false);
+  const debounceRef = useRef(null);
 
-  const fetchBacklog = async (reset = false) => {
-    const p = reset ? 1 : page;
+  const buildParams = useCallback((p = 1) => {
     const params = new URLSearchParams({
       page: p,
       limit: 20,
-      sort: 'newest',
+      sort: sortBy,
       ...(category !== 'all' && { category }),
-      ...(statusTab === 'done' && { done: 1 }),
+      ...(doneTab === 'done' && { done: 1 }),
+      ...(statusFilter !== 'all' && { status: statusFilter }),
+      ...(searchQuery && { search: searchQuery }),
     });
-    const data = await api.get(`/api/backlog?${params}`);
+    return params;
+  }, [category, doneTab, statusFilter, sortBy, searchQuery]);
+
+  const fetchBacklog = useCallback(async (reset = false) => {
+    const p = reset ? 1 : page;
+    const data = await api.get(`/api/backlog?${buildParams(p)}`);
     if (reset) {
       setItems(data.items);
       setPage(1);
-    } else if (p === 1) {
-      setItems(data.items);
     } else {
       setItems(prev => [...prev, ...data.items]);
     }
     setHasMore(data.hasMore);
     setTotal(data.total);
-  };
+  }, [buildParams, page]);
 
   useEffect(() => {
     fetchBacklog(true);
-  }, [category, statusTab]);
+  }, [category, doneTab, statusFilter, sortBy, searchQuery]);
 
-  const loadMore = () => {
+  // Debounced search
+  const handleSearchChange = (value) => {
+    setSearch(value);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setSearchQuery(value), 300);
+  };
+
+  const loadMore = async () => {
     const nextPage = page + 1;
     setPage(nextPage);
-    const params = new URLSearchParams({
-      page: nextPage,
-      limit: 20,
-      sort: 'newest',
-      ...(category !== 'all' && { category }),
-      ...(statusTab === 'done' && { done: 1 }),
-    });
-    api.get(`/api/backlog?${params}`).then(data => {
-      setItems(prev => [...prev, ...data.items]);
-      setHasMore(data.hasMore);
-    });
+    const data = await api.get(`/api/backlog?${buildParams(nextPage)}`);
+    setItems(prev => [...prev, ...data.items]);
+    setHasMore(data.hasMore);
   };
 
   const toggleDone = async (id, currentDone) => {
@@ -96,21 +113,46 @@ export default function BacklogPage() {
         <button className="btn-green btn-sm" onClick={() => setShowAdd(true)}>+ Dodaj</button>
       </div>
 
-      {/* Status tabs */}
-      <div className="backlog-tabs" style={{ marginBottom: 8 }}>
-        {STATUS_TABS.map(tab => (
-          <button
-            key={tab.id}
-            className={`backlog-tab ${statusTab === tab.id ? 'active' : ''}`}
-            onClick={() => setStatusTab(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* Search bar */}
+      <div style={{ marginBottom: 12 }}>
+        <input
+          className="search-input"
+          type="text"
+          value={search}
+          onChange={e => handleSearchChange(e.target.value)}
+          placeholder="Szukaj w backlogu..."
+        />
+      </div>
+
+      {/* Sort + Done tabs row */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="backlog-tabs" style={{ marginBottom: 0 }}>
+          <button className={`backlog-tab ${doneTab === 'active' ? 'active' : ''}`} onClick={() => setDoneTab('active')}>Aktywne</button>
+          <button className={`backlog-tab ${doneTab === 'done' ? 'active' : ''}`} onClick={() => setDoneTab('done')}>Skończone</button>
+        </div>
+        <select
+          value={sortBy}
+          onChange={e => setSortBy(e.target.value)}
+          style={{
+            marginLeft: 'auto',
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            color: 'var(--text-dim)',
+            padding: '6px 12px',
+            borderRadius: 4,
+            fontSize: 11,
+            fontFamily: 'inherit',
+            cursor: 'pointer',
+          }}
+        >
+          {SORT_OPTIONS.map(o => (
+            <option key={o.id} value={o.id}>{o.label}</option>
+          ))}
+        </select>
       </div>
 
       {/* Category tabs */}
-      <div className="backlog-tabs">
+      <div className="backlog-tabs" style={{ marginBottom: 8 }}>
         {CATEGORIES.map(cat => (
           <button
             key={cat.id}
@@ -121,6 +163,22 @@ export default function BacklogPage() {
           </button>
         ))}
       </div>
+
+      {/* Status filter */}
+      {doneTab === 'active' && (
+        <div className="backlog-tabs" style={{ marginBottom: 12 }}>
+          {STATUS_FILTERS.map(sf => (
+            <button
+              key={sf.id}
+              className={`backlog-tab ${statusFilter === sf.id ? 'active' : ''}`}
+              onClick={() => setStatusFilter(sf.id)}
+              style={statusFilter === sf.id ? {} : { borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+            >
+              {sf.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Items */}
       <div className="backlog-list">
@@ -142,10 +200,8 @@ export default function BacklogPage() {
       )}
 
       {items.length === 0 && (
-        <div className="empty-state">
-          <div className="empty-icon">&#128230;</div>
-          Brak elementow w backlogu
-          <div className="empty-text">Kliknij "+ Dodaj" zeby dodac pierwsze zadanie.</div>
+        <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 32, fontSize: 12 }}>
+          {searchQuery ? `Brak wyników dla "${searchQuery}"` : 'Brak elementów w backlogu'}
         </div>
       )}
 

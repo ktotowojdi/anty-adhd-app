@@ -198,7 +198,9 @@ app.get('/api/backlog', (req, res) => {
   const offset = (page - 1) * limit;
   const category = req.query.category;
   const done = req.query.done === '1' ? 1 : 0;
-  const sort = req.query.sort === 'oldest' ? 'ASC' : 'DESC';
+  const status = req.query.status;
+  const search = req.query.search;
+  const sortParam = req.query.sort || 'newest';
 
   let where = 'WHERE done = ?';
   const params = [done];
@@ -208,9 +210,24 @@ app.get('/api/backlog', (req, res) => {
     params.push(category);
   }
 
+  if (status) {
+    where += ' AND status = ?';
+    params.push(status);
+  }
+
+  if (search) {
+    where += ' AND (title LIKE ? OR description LIKE ?)';
+    const term = `%${search}%`;
+    params.push(term, term);
+  }
+
+  let orderBy = 'created_at DESC';
+  if (sortParam === 'oldest') orderBy = 'created_at ASC';
+  else if (sortParam === 'alpha') orderBy = 'title ASC';
+
   const total = db.prepare(`SELECT COUNT(*) as count FROM backlog ${where}`).get(...params).count;
   const items = db.prepare(
-    `SELECT * FROM backlog ${where} ORDER BY created_at ${sort} LIMIT ? OFFSET ?`
+    `SELECT * FROM backlog ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`
   ).all(...params, limit, offset);
 
   // Fetch subtasks for each item
