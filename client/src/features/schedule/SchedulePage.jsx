@@ -76,8 +76,10 @@ export default function SchedulePage() {
           <div className="sub">Nie pracujesz dzisiaj. Odpoczywaj.</div>
         </div>
       ) : tasks.length === 0 ? (
-        <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 32 }}>
-          Brak zadań na ten dzień. Kliknij "+ Dodaj" lub przenieś z backlogu.
+        <div className="empty-state">
+          <div className="empty-icon">&#128203;</div>
+          Brak zadan na ten dzien
+          <div className="empty-text">Kliknij "+ Dodaj" lub przenies z backlogu.</div>
         </div>
       ) : (
         <table className="schedule-table">

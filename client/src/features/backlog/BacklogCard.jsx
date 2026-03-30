@@ -130,7 +130,7 @@ export default function BacklogCard({ item, onToggleDone, onDelete, onUpdate }) 
             editingSubtask === st.id ? (
               <div key={st.id} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                 <input
-                  style={{ flex: 1, background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)', padding: '6px 8px', borderRadius: 4, fontSize: 12, fontFamily: 'inherit' }}
+                  className="inline-input" style={{ flex: 1 }}
                   value={editSubtaskText}
                   onChange={e => setEditSubtaskText(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && saveEditSubtask()}
@@ -139,7 +139,7 @@ export default function BacklogCard({ item, onToggleDone, onDelete, onUpdate }) 
                 <select
                   value={editSubtaskMinutes}
                   onChange={e => setEditSubtaskMinutes(Number(e.target.value))}
-                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)', padding: '6px', borderRadius: 4, fontSize: 12, fontFamily: 'inherit' }}
+                  className="inline-select"
                 >
                   <option value={15}>15m</option>
                   <option value={30}>30m</option>
@@ -176,7 +176,7 @@ export default function BacklogCard({ item, onToggleDone, onDelete, onUpdate }) 
             showSubtaskForm ? (
               <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
                 <input
-                  style={{ flex: 1, background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)', padding: '6px 8px', borderRadius: 4, fontSize: 12, fontFamily: 'inherit' }}
+                  className="inline-input" style={{ flex: 1 }}
                   placeholder="Nazwa sub-taska"
                   value={subtaskText}
                   onChange={e => setSubtaskText(e.target.value)}
@@ -186,7 +186,7 @@ export default function BacklogCard({ item, onToggleDone, onDelete, onUpdate }) 
                 <select
                   value={subtaskMinutes}
                   onChange={e => setSubtaskMinutes(Number(e.target.value))}
-                  style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)', padding: '6px', borderRadius: 4, fontSize: 12, fontFamily: 'inherit' }}
+                  className="inline-select"
                 >
                   <option value={15}>15m</option>
                   <option value={30}>30m</option>

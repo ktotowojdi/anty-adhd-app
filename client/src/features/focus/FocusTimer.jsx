@@ -143,11 +143,17 @@ export default function FocusTimer() {
       </div>
 
       {/* Today's sessions */}
-      {sessions.length > 0 && (
-        <div className="section" style={{ marginTop: 24 }}>
-          <div className="section-title">
-            <h2>Dzisiejsze sesje</h2>
+      <div className="section" style={{ marginTop: 24 }}>
+        <div className="section-title">
+          <h2>Dzisiejsze sesje</h2>
+        </div>
+        {sessions.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">&#9201;</div>
+            Brak sesji
+            <div className="empty-text">Kliknij Start, zeby rozpoczac pierwsza sesje fokusa.</div>
           </div>
+        ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {sessions.map((s, i) => (
               <div key={i} style={{
@@ -170,8 +176,8 @@ export default function FocusTimer() {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

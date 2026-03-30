@@ -142,8 +142,10 @@ export default function BacklogPage() {
       )}
 
       {items.length === 0 && (
-        <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 32 }}>
-          Brak elementów w backlogu.
+        <div className="empty-state">
+          <div className="empty-icon">&#128230;</div>
+          Brak elementow w backlogu
+          <div className="empty-text">Kliknij "+ Dodaj" zeby dodac pierwsze zadanie.</div>
         </div>
       )}
 

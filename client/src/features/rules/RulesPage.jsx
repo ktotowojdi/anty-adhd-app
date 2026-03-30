@@ -43,19 +43,27 @@ export default function RulesPage() {
           <h2>Zasady</h2>
           <button className="btn-green btn-sm" onClick={() => setShowAddRule(true)}>+ Dodaj</button>
         </div>
-        <div className="rules-grid">
-          {rules.map((rule, i) => (
-            <div key={rule.id} className="rule-card">
-              <div className="rule-num">Zasada {i + 1}</div>
-              <div className="rule-text">{rule.text}</div>
-              <button
-                className="btn-icon"
-                style={{ position: 'absolute', top: 8, right: 8, color: 'var(--red)', fontSize: 12 }}
-                onClick={() => deleteRule(rule.id)}
-              >&times;</button>
-            </div>
-          ))}
-        </div>
+        {rules.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">&#128736;</div>
+            Brak zasad
+            <div className="empty-text">Dodaj pierwsza zasade, ktora pomoze Ci utrzymac fokus.</div>
+          </div>
+        ) : (
+          <div className="rules-grid">
+            {rules.map((rule, i) => (
+              <div key={rule.id} className="rule-card">
+                <div className="rule-num">Zasada {i + 1}</div>
+                <div className="rule-text">{rule.text}</div>
+                <button
+                  className="btn-icon"
+                  style={{ position: 'absolute', top: 8, right: 8, color: 'var(--red)', fontSize: 12 }}
+                  onClick={() => deleteRule(rule.id)}
+                >&times;</button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Warnings */}

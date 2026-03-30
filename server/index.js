@@ -144,6 +144,13 @@ app.post('/api/import-custom-backlog', (req, res) => {
 // ---- API ROUTES ----
 
 // === SCHEDULE ===
+// IMPORTANT: /range must be BEFORE /:date to avoid being caught by param matcher
+app.get('/api/schedule/range', (req, res) => {
+  const { from, to } = req.query;
+  const schedules = db.prepare('SELECT * FROM daily_schedules WHERE date BETWEEN ? AND ?').all(from, to);
+  res.json(schedules);
+});
+
 app.get('/api/schedule/:date', (req, res) => {
   const { date } = req.params;
   const schedule = db.prepare('SELECT * FROM daily_schedules WHERE date = ?').get(date);
@@ -159,12 +166,6 @@ app.put('/api/schedule/:date', (req, res) => {
     ON CONFLICT(date) DO UPDATE SET type=?, type_label=?, title=?`)
     .run(date, type || 'work', type_label || null, title || date, type || 'work', type_label || null, title || date);
   res.json({ ok: true });
-});
-
-app.get('/api/schedule/range', (req, res) => {
-  const { from, to } = req.query;
-  const schedules = db.prepare('SELECT * FROM daily_schedules WHERE date BETWEEN ? AND ?').all(from, to);
-  res.json(schedules);
 });
 
 // === TASKS ===
