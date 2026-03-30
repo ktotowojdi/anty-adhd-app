@@ -2,6 +2,7 @@
   "name": "anty-adhd-app",
   "version": "2.0.0",
   "scripts": {
+    "postinstall": "cd client && npm install",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "PORT=3050 node server/index.js",
     "dev:client": "cd client && npm run dev",
