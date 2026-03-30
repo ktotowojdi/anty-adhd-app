@@ -1,10 +1,23 @@
 {
   "name": "anty-adhd-app",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "scripts": {
-    "start": "node server.js"
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "PORT=3050 node server/index.js",
+    "dev:client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "start": "node server/index.js",
+    "migrate": "node server/migrate-from-json.js"
   },
   "dependencies": {
+    "better-sqlite3": "^11.8.0",
+    "cors": "^2.8.5",
     "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }
