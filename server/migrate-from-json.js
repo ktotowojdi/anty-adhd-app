@@ -131,6 +131,31 @@ function migrateFromJson(db, dataDir) {
       stats.backlog++;
     }
 
+    // ---- IMPORT FROM state.json: adhd_custom_backlog (user-added items) ----
+    const customBacklog = data['adhd_custom_backlog'] || [];
+    let customBacklogCount = 0;
+    if (Array.isArray(customBacklog)) {
+      for (let i = 0; i < customBacklog.length; i++) {
+        const item = customBacklog[i];
+        if (!item) continue;
+        const title = item.title || item.text || '';
+        if (!title) continue;
+        const category = item.category || 'inne';
+        const status = item.status || 'todo';
+        const desc = item.description || item.desc || null;
+        const note = item.note || null;
+        const done = item.done ? 1 : 0;
+        insertBacklog.run(title, category, status, note || desc, done);
+        const newId = db.prepare('SELECT last_insert_rowid() as id').get().id;
+        backlogKeyMap[`c_${i}`] = newId;
+        customBacklogCount++;
+        stats.backlog++;
+      }
+    }
+    if (customBacklogCount > 0) {
+      console.log(`[migrate] Imported ${customBacklogCount} custom backlog items from state.json`);
+    }
+
     // ---- IMPORT FROM state.json: adhd_backlog_done ----
     const backlogDone = data['adhd_backlog_done'] || {};
     let backlogDoneCount = 0;

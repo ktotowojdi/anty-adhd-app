@@ -55,6 +55,92 @@ app.get('/api/state', (req, res) => {
   }
 });
 
+// One-time: import custom backlog from state.json (for items missed in initial migration)
+app.post('/api/import-custom-backlog', (req, res) => {
+  try {
+    if (!fs.existsSync(STATE_FILE)) return res.json({ error: 'No state.json found' });
+    const state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+    const data = state.data || {};
+
+    const customBacklog = data['adhd_custom_backlog'] || [];
+    if (!Array.isArray(customBacklog) || customBacklog.length === 0) {
+      return res.json({ imported: 0, message: 'No custom backlog in state.json' });
+    }
+
+    // Check which titles already exist to avoid duplicates
+    const existing = new Set(
+      db.prepare('SELECT title FROM backlog').all().map(r => r.title)
+    );
+
+    const insertBacklog = db.prepare(
+      'INSERT INTO backlog (title, category, status, note, done) VALUES (?, ?, ?, ?, ?)'
+    );
+
+    let imported = 0;
+    for (const item of customBacklog) {
+      if (!item) continue;
+      const title = item.title || item.text || '';
+      if (!title || existing.has(title)) continue;
+      const category = item.category || 'inne';
+      const status = item.status || 'todo';
+      const note = item.note || item.description || null;
+      const done = item.done ? 1 : 0;
+      insertBacklog.run(title, category, status, note, done);
+      imported++;
+    }
+
+    // Also import custom daily tasks
+    const insertTask = db.prepare(
+      'INSERT INTO tasks (schedule_date, time_start, time_end, text, done, sort_order) VALUES (?, ?, ?, ?, ?, ?)'
+    );
+    const existingTasks = new Set(
+      db.prepare('SELECT schedule_date || text as k FROM tasks').all().map(r => r.k)
+    );
+
+    let importedTasks = 0;
+    const datePattern = /^adhd_custom_(\d{4}-\d{2}-\d{2})$/;
+    for (const [key, val] of Object.entries(data)) {
+      const match = key.match(datePattern);
+      if (!match) continue;
+      const date = match[1];
+      const tasks = Array.isArray(val) ? val : [];
+      tasks.forEach((task, i) => {
+        if (!task) return;
+        const text = task.text || task.title || '';
+        if (!text || existingTasks.has(date + text)) return;
+        const timeRaw = task.time || '';
+        const [timeStart, timeEnd] = timeRaw.includes('-') ? timeRaw.split('-') : [timeRaw || null, null];
+        const done = task.done ? 1 : 0;
+        insertTask.run(date, timeStart || null, timeEnd || null, text, done, i);
+        importedTasks++;
+      });
+    }
+
+    // Apply done states from adhd_backlog_done
+    const backlogDone = data['adhd_backlog_done'] || {};
+    const allBacklog = db.prepare('SELECT id, title FROM backlog ORDER BY id ASC').all();
+    // Map h_N to default items (first 26), c_N to custom items (27+)
+    let doneCount = 0;
+    for (const [key, val] of Object.entries(backlogDone)) {
+      if (!val) continue;
+      const hMatch = key.match(/^h_(\d+)$/);
+      const cMatch = key.match(/^c_(\d+)$/);
+      let idx;
+      if (hMatch) idx = parseInt(hMatch[1]);
+      else if (cMatch) idx = 26 + parseInt(cMatch[1]); // custom items start after 26 defaults
+      else continue;
+      if (idx < allBacklog.length) {
+        db.prepare('UPDATE backlog SET done = 1, status = ? WHERE id = ?').run('done', allBacklog[idx].id);
+        doneCount++;
+      }
+    }
+
+    res.json({ imported, importedTasks, doneApplied: doneCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ---- API ROUTES ----
 
 // === SCHEDULE ===
